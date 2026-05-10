@@ -1,4 +1,4 @@
-# DeepPomo
+# PomoTrack
 
 A lightweight web app designed to boost productivity using the Pomodoro technique. Built with Next.js (React) for the frontend, styled with Tailwind CSS, powered by a FastAPI (Python) backend, and using PostgreSQL for storage. This MVP focuses on core functionality:
 
