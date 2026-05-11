@@ -5,12 +5,15 @@ import Tasks from "./pages/Tasks";
 import Analytics from "./pages/Analytics";
 import Achievements from "./pages/Achievements";
 import Layout from "./components/Layout";
+import Login from "./pages/Login";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard" />} />
+
+        <Route path="/login" element={<Login />} />
 
         <Route
           path="/dashboard"
