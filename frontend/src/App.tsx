@@ -4,6 +4,8 @@ import Timer from "./pages/Timer";
 import Tasks from "./pages/Tasks";
 import Analytics from "./pages/Analytics";
 import Achievements from "./pages/Achievements";
+import History from "./pages/History";
+import Settings from "./pages/Settings";
 import Layout from "./components/Layout";
 import Login from "./pages/Login";
 
@@ -43,6 +45,15 @@ function App() {
         />
 
         <Route
+          path="/history"
+          element={
+            <Layout>
+              <History />
+            </Layout>
+          }
+        />
+
+        <Route
           path="/analytics"
           element={
             <Layout>
@@ -56,6 +67,15 @@ function App() {
           element={
             <Layout>
               <Achievements />
+            </Layout>
+          }
+        />
+
+        <Route
+          path="/settings"
+          element={
+            <Layout>
+              <Settings />
             </Layout>
           }
         />
