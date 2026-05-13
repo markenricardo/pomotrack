@@ -6,14 +6,12 @@ type LayoutProps = {
 
 function Layout({ children }: LayoutProps) {
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900">
-      <div className="flex">
-        <Sidebar />
+    <div className="layout">
+      <Sidebar />
 
-        <main className="flex-1 p-8">
-          {children}
-        </main>
-      </div>
+      <main className="layout-main">
+        {children}
+      </main>
     </div>
   );
 }
