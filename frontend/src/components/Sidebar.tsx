@@ -9,6 +9,7 @@ import {
   Settings,
   LogOut,
 } from "lucide-react";
+import "./Sidebar.css";
 
 function Sidebar() {
   const mainNav = [
@@ -48,48 +49,38 @@ function Sidebar() {
   ];
 
   return (
-    <aside className="min-h-screen w-64 bg-white border-r border-slate-200 px-5 py-6 flex flex-col">
+    <aside className="sidebar">
       <div>
-        <h1 className="text-2xl font-bold text-red-600">PomoTrack</h1>
-        <p className="text-sm text-slate-500 mt-1">Focus. Track. Improve.</p>
-      </div>
+        <div className="sidebar-header">
+          <div className="logo-box">P</div>
 
-      <nav className="mt-8 flex flex-col gap-6">
-        <div>
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-            Main
-          </p>
-
-          <div className="flex flex-col gap-1">
-            {mainNav.map((item) => {
-              const Icon = item.icon;
-
-              return (
-                <NavLink
-                  key={item.name}
-                  to={item.path}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
-                      isActive
-                        ? "bg-red-50 text-red-600"
-                        : "text-slate-600 hover:bg-slate-100 hover:text-red-600"
-                    }`
-                  }
-                >
-                  <Icon size={18} />
-                  <span>{item.name}</span>
-                </NavLink>
-              );
-            })}
+          <div>
+            <h2>PomoTrack</h2>
+            <p>Focus. Track. Improve.</p>
           </div>
         </div>
 
-        <div>
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-            Productivity
-          </p>
+        <nav className="sidebar-nav">
+          {mainNav.map((item) => {
+            const Icon = item.icon;
 
-          <div className="flex flex-col gap-1">
+            return (
+              <NavLink
+                key={item.name}
+                to={item.path}
+                className={({ isActive }) =>
+                  isActive ? "sidebar-link active" : "sidebar-link"
+                }
+              >
+                <Icon size={20} />
+                <span>{item.name}</span>
+              </NavLink>
+            );
+          })}
+
+          <div className="sidebar-section">
+            <p className="sidebar-section-title">Productivity</p>
+
             {productivityNav.map((item) => {
               const Icon = item.icon;
 
@@ -98,39 +89,31 @@ function Sidebar() {
                   key={item.name}
                   to={item.path}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
-                      isActive
-                        ? "bg-red-50 text-red-600"
-                        : "text-slate-600 hover:bg-slate-100 hover:text-red-600"
-                    }`
+                    isActive ? "sidebar-link active" : "sidebar-link"
                   }
                 >
-                  <Icon size={18} />
+                  <Icon size={20} />
                   <span>{item.name}</span>
                 </NavLink>
               );
             })}
           </div>
-        </div>
-      </nav>
+        </nav>
+      </div>
 
-      <div className="mt-auto pt-6 border-t border-slate-200">
+      <div className="sidebar-footer">
         <NavLink
           to="/settings"
           className={({ isActive }) =>
-            `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
-              isActive
-                ? "bg-red-50 text-red-600"
-                : "text-slate-600 hover:bg-slate-100 hover:text-red-600"
-            }`
+            isActive ? "sidebar-link active" : "sidebar-link"
           }
         >
-          <Settings size={18} />
+          <Settings size={20} />
           <span>Settings</span>
         </NavLink>
 
-        <button className="mt-2 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-600">
-          <LogOut size={18} />
+        <button className="logout-btn">
+          <LogOut size={20} />
           <span>Logout</span>
         </button>
       </div>
