@@ -2,15 +2,18 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 
-function Login() {
+function Signup() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     username: "",
+    email: "",
     password: "",
+    confirmPassword: "",
   });
 
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,28 +29,44 @@ function Login() {
     e.preventDefault();
 
     setError("");
+    setSuccess("");
+
+    if (formData.password.length < 8) {
+      setError("Password must be at least 8 characters long.");
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const loginData = new URLSearchParams();
-
-      loginData.append("username", formData.username);
-      loginData.append("password", formData.password);
-
-      const response = await api.post("/api/v1/auth/token", loginData, {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
+      const response = await api.post("/api/v1/auth/register", {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
       });
 
-      localStorage.setItem("access_token", response.data.access_token);
+      console.log("Signup successful:", response.data);
 
-      console.log("Login successful:", response.data);
+      setSuccess("Account created successfully. Redirecting to login...");
 
-      navigate("/dashboard");
+      setFormData({
+        username: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      });
+
+      setTimeout(() => {
+        navigate("/login");
+      }, 1000);
     } catch (err) {
-      console.error("Login failed:", err);
-      setError("Invalid username or password.");
+      console.error("Signup failed:", err);
+      setError("Signup failed. Username or email may already be registered.");
     } finally {
       setLoading(false);
     }
@@ -59,7 +78,7 @@ function Login() {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-[#2f2a26]">PomoTrack</h1>
           <p className="text-sm text-gray-500 mt-2">
-            Log in to continue tracking your focus sessions.
+            Create an account to start tracking your focus sessions.
           </p>
         </div>
 
@@ -76,8 +95,28 @@ function Login() {
               type="text"
               id="username"
               name="username"
-              placeholder="Enter your username"
+              placeholder="Choose a username"
               value={formData.username}
+              onChange={handleChange}
+              required
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-[#d65a31] focus:ring-2 focus:ring-[#d65a31]/20"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Email Address
+            </label>
+
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="Enter your email"
+              value={formData.email}
               onChange={handleChange}
               required
               className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-[#d65a31] focus:ring-2 focus:ring-[#d65a31]/20"
@@ -96,8 +135,28 @@ function Login() {
               type="password"
               id="password"
               name="password"
-              placeholder="Enter your password"
+              placeholder="Create a password"
               value={formData.password}
+              onChange={handleChange}
+              required
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-[#d65a31] focus:ring-2 focus:ring-[#d65a31]/20"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="confirmPassword"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Confirm Password
+            </label>
+
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              placeholder="Confirm your password"
+              value={formData.confirmPassword}
               onChange={handleChange}
               required
               className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-[#d65a31] focus:ring-2 focus:ring-[#d65a31]/20"
@@ -110,34 +169,29 @@ function Login() {
             </p>
           )}
 
-          <div className="flex items-center justify-between text-sm">
-            <label className="flex items-center gap-2 text-gray-600">
-              <input type="checkbox" className="rounded border-gray-300" />
-              Remember me
-            </label>
-
-            <button type="button" className="text-[#d65a31] hover:underline">
-              Forgot password?
-            </button>
-          </div>
+          {success && (
+            <p className="rounded-lg bg-green-50 px-4 py-3 text-sm text-green-600">
+              {success}
+            </p>
+          )}
 
           <button
             type="submit"
             disabled={loading}
             className="w-full rounded-lg bg-[#d65a31] py-3 text-white font-semibold hover:bg-[#bf4d28] transition disabled:opacity-60"
           >
-            {loading ? "Logging in..." : "Log In"}
+            {loading ? "Creating account..." : "Sign Up"}
           </button>
         </form>
 
         <p className="text-center text-sm text-gray-500 mt-6">
-          Don&apos;t have an account?{" "}
+          Already have an account?{" "}
           <button
             type="button"
-            onClick={() => navigate("/signup")}
+            onClick={() => navigate("/login")}
             className="text-[#d65a31] font-medium hover:underline"
           >
-            Sign up
+            Log in
           </button>
         </p>
       </div>
@@ -145,4 +199,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default Signup;

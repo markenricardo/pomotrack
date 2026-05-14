@@ -1,89 +1,121 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import type { FormEvent } from "react";
 import "../styles/Tasks.css";
 
-type Priority = "High" | "Medium" | "Low";
-type TaskStatus = "Pending" | "In Progress" | "Completed";
-type FilterStatus = "All" | TaskStatus;
-type SortOption = "Most Recent" | "Deadline" | "Priority";
+import {
+  getTasks,
+  createTask,
+  updateTask,
+  deleteTask,
+} from "../api/tasksApi";
 
-type Task = {
-  id: number;
-  title: string;
-  priority: Priority;
-  status: TaskStatus;
-  pomodoros: number;
-  deadline: string;
+import type {
+  BackendTask,
+  BackendPriority,
+  BackendTaskStatus,
+} from "../api/tasksApi";
+
+import TaskFilterBar from "../components/TaskFilterBar";
+import TaskCard from "../components/TaskCard";
+
+import type {
+  FilterStatus,
+  NewTaskForm,
+  Priority,
+  SortOption,
+  Task,
+  TaskStatus,
+} from "../types/taskTypes";
+
+const priorityToFrontend = (priority?: BackendPriority | null): Priority => {
+  if (priority === "high") return "High";
+  if (priority === "low") return "Low";
+  return "Medium";
 };
 
-const initialTasks: Task[] = [
-  {
-    id: 1,
-    title: "Software Design Documentation",
-    priority: "High",
-    status: "In Progress",
-    pomodoros: 7,
-    deadline: "2026-05-16",
-  },
-  {
-    id: 2,
-    title: "Software Design Documentation",
-    priority: "High",
-    status: "In Progress",
-    pomodoros: 7,
-    deadline: "2026-05-16",
-  },
-  {
-    id: 3,
-    title: "Software Design Documentation",
-    priority: "High",
-    status: "In Progress",
-    pomodoros: 7,
-    deadline: "2026-05-16",
-  },
-  {
-    id: 4,
-    title: "Software Design Documentation",
-    priority: "High",
-    status: "In Progress",
-    pomodoros: 7,
-    deadline: "2026-05-16",
-  },
-  {
-    id: 5,
-    title: "Software Design Documentation",
-    priority: "High",
-    status: "In Progress",
-    pomodoros: 7,
-    deadline: "2026-05-16",
-  },
-  {
-    id: 6,
-    title: "Software Design Documentation",
-    priority: "High",
-    status: "In Progress",
-    pomodoros: 7,
-    deadline: "2026-05-16",
-  },
-  {
-    id: 7,
-    title: "Database Schema Update",
-    priority: "Medium",
-    status: "Pending",
-    pomodoros: 4,
-    deadline: "2026-05-20",
-  },
-];
+const priorityToBackend = (priority: Priority): BackendPriority => {
+  if (priority === "High") return "high";
+  if (priority === "Low") return "low";
+  return "medium";
+};
+
+const statusToFrontend = (status: BackendTaskStatus): TaskStatus => {
+  if (status === "in_progress") return "In Progress";
+  if (status === "completed") return "Completed";
+  if (status === "blocked") return "Blocked";
+  return "Pending";
+};
+
+const statusToBackend = (status: TaskStatus): BackendTaskStatus => {
+  if (status === "In Progress") return "in_progress";
+  if (status === "Completed") return "completed";
+  if (status === "Blocked") return "blocked";
+  return "pending";
+};
+
+const mapTaskFromBackend = (task: BackendTask): Task => ({
+  id: task.id,
+  title: task.title,
+  description: task.description,
+  priority: priorityToFrontend(task.priority),
+  status: statusToFrontend(task.status),
+  pomodoros: task.estimated_duration ?? 1,
+  deadline: task.deadline ?? "",
+  createdAt: task.created_at,
+});
 
 function Tasks() {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [priorityFilter, setPriorityFilter] = useState<"All" | Priority>("All");
   const [statusFilter, setStatusFilter] = useState<FilterStatus>("All");
   const [sortBy, setSortBy] = useState<SortOption>("Most Recent");
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState("");
+
+  const [newTask, setNewTask] = useState<NewTaskForm>({
+    title: "",
+    description: "",
+    priority: "",
+    status: "",
+    pomodoros: "",
+    deadline: "",
+  });
+
   const totalTasks = tasks.length;
-  const completedTasks = tasks.filter((task) => task.status === "Completed").length;
-  const inProgressTasks = tasks.filter((task) => task.status === "In Progress").length;
-  const pendingTasks = tasks.filter((task) => task.status === "Pending").length;
+
+  const completedTasks = tasks.filter(
+    (task) => task.status === "Completed"
+  ).length;
+
+  const inProgressTasks = tasks.filter(
+    (task) => task.status === "In Progress"
+  ).length;
+
+  const pendingTasks = tasks.filter(
+    (task) => task.status === "Pending"
+  ).length;
+
+  useEffect(() => {
+    loadTasks();
+  }, []);
+
+  const loadTasks = async () => {
+    try {
+      setIsLoading(true);
+      setError("");
+
+      const backendTasks = await getTasks();
+      setTasks(backendTasks.map(mapTaskFromBackend));
+    } catch (err) {
+      console.error(err);
+      setError("Unable to load tasks. Please make sure you are logged in.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredTasks = useMemo(() => {
     let result = [...tasks];
@@ -101,10 +133,17 @@ function Tasks() {
     }
 
     if (sortBy === "Deadline") {
-      result.sort(
-        (a, b) =>
-          new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
-      );
+      result.sort((a, b) => {
+        const firstDate = a.deadline
+          ? new Date(a.deadline).getTime()
+          : Number.MAX_SAFE_INTEGER;
+
+        const secondDate = b.deadline
+          ? new Date(b.deadline).getTime()
+          : Number.MAX_SAFE_INTEGER;
+
+        return firstDate - secondDate;
+      });
     }
 
     if (sortBy === "Priority") {
@@ -114,43 +153,130 @@ function Tasks() {
         Low: 3,
       };
 
-      result.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+      result.sort(
+        (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]
+      );
     }
 
     return result;
   }, [tasks, priorityFilter, statusFilter, sortBy]);
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+
+    setNewTask({
+      title: "",
+      description: "",
+      priority: "",
+      status: "",
+      pomodoros: "",
+      deadline: "",
     });
   };
 
-  const handleStartTimer = (id: number) => {
-    setTasks((prev) =>
-      prev.map((task) =>
-        task.id === id ? { ...task, status: "In Progress" } : task
-      )
-    );
+  const handleCreateTask = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (
+      !newTask.title.trim() ||
+      !newTask.priority ||
+      !newTask.status ||
+      !newTask.pomodoros ||
+      !newTask.deadline
+    ) {
+      alert("Please complete all required fields.");
+      return;
+    }
+
+    try {
+      setIsCreating(true);
+
+      const createdBackendTask = await createTask({
+        title: newTask.title.trim(),
+        description: newTask.description.trim() || null,
+        priority: priorityToBackend(newTask.priority),
+        status: statusToBackend(newTask.status),
+        estimated_duration: Number(newTask.pomodoros),
+        deadline: newTask.deadline,
+      });
+
+      const mappedTask = mapTaskFromBackend(createdBackendTask);
+
+      const taskWithDeadline: Task = {
+        ...mappedTask,
+        deadline: createdBackendTask.deadline ?? newTask.deadline,
+      };
+
+      setTasks((prev) => [taskWithDeadline, ...prev]);
+      handleCloseModal();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to create task.");
+    } finally {
+      setIsCreating(false);
+    }
   };
 
-  const handleDelete = (id: number) => {
-    setTasks((prev) => prev.filter((task) => task.id !== id));
+  const handleStartTimer = async (id: number) => {
+    try {
+      const updatedBackendTask = await updateTask(id, {
+        status: "in_progress",
+      });
+
+      const updatedTask = mapTaskFromBackend(updatedBackendTask);
+
+      setTasks((prev) =>
+        prev.map((task) =>
+          task.id === id
+            ? {
+                ...updatedTask,
+                deadline: updatedTask.deadline || task.deadline,
+              }
+            : task
+        )
+      );
+    } catch (err) {
+      console.error(err);
+      alert("Failed to start task.");
+    }
   };
 
-  const handleAddTask = () => {
-    const newTask: Task = {
-      id: Date.now(),
-      title: "New Pomodoro Task",
-      priority: "Medium",
-      status: "Pending",
-      pomodoros: 3,
-      deadline: "2026-05-24",
-    };
+  const handleCompleteTask = async (id: number) => {
+    try {
+      const updatedBackendTask = await updateTask(id, {
+        status: "completed",
+      });
 
-    setTasks((prev) => [newTask, ...prev]);
+      const updatedTask = mapTaskFromBackend(updatedBackendTask);
+
+      setTasks((prev) =>
+        prev.map((task) =>
+          task.id === id
+            ? {
+                ...updatedTask,
+                deadline: updatedTask.deadline || task.deadline,
+              }
+            : task
+        )
+      );
+    } catch (err) {
+      console.error(err);
+      alert("Failed to complete task.");
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteTask(id);
+      setTasks((prev) => prev.filter((task) => task.id !== id));
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete task.");
+    }
   };
 
   return (
@@ -194,104 +320,165 @@ function Tasks() {
         </div>
       </section>
 
-      <section className="tasks-filter-card">
-        <div className="filter-group">
-          <label>Priority</label>
-          <select
-            value={priorityFilter}
-            onChange={(event) =>
-              setPriorityFilter(event.target.value as "All" | Priority)
-            }
-          >
-            <option value="All">All Priorities</option>
-            <option value="High">High</option>
-            <option value="Medium">Medium</option>
-            <option value="Low">Low</option>
-          </select>
-        </div>
+      <TaskFilterBar
+        priorityFilter={priorityFilter}
+        statusFilter={statusFilter}
+        sortBy={sortBy}
+        onPriorityChange={setPriorityFilter}
+        onStatusChange={setStatusFilter}
+        onSortChange={setSortBy}
+        onAddTask={handleOpenModal}
+      />
 
-        <div className="filter-group">
-          <label>Status</label>
-          <select
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value as FilterStatus)}
-          >
-            <option value="All">All Status</option>
-            <option value="Pending">Pending</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Completed">Completed</option>
-          </select>
-        </div>
-
-        <div className="filter-group">
-          <label>Sort By</label>
-          <select
-            value={sortBy}
-            onChange={(event) => setSortBy(event.target.value as SortOption)}
-          >
-            <option value="Most Recent">Most Recent</option>
-            <option value="Deadline">Deadline</option>
-            <option value="Priority">Priority</option>
-          </select>
-        </div>
-
-        <button className="add-task-btn" onClick={handleAddTask}>
-          Add New Task
-        </button>
-      </section>
+      {isLoading && <p className="tasks-message">Loading tasks...</p>}
+      {error && <p className="tasks-message error">{error}</p>}
 
       <section className="tasks-grid">
-        {filteredTasks.map((task) => (
-          <article className="task-card" key={task.id}>
-            <div className="task-card-header">
-              <h3>{task.title}</h3>
-              <span className={`status-pill ${task.status.toLowerCase().replace(" ", "-")}`}>
-                {task.status}
-              </span>
-            </div>
-
-            <div className="task-info">
-              <p>
-                <span>Priority:</span>
-                <strong className={`priority-pill ${task.priority.toLowerCase()}`}>
-                  {task.priority}
-                </strong>
-              </p>
-
-              <p>
-                <span>Estimated Pomodoros:</span>
-                <strong>{task.pomodoros}</strong>
-              </p>
-
-              <p>
-                <span>Deadline:</span>
-                <strong>{formatDate(task.deadline)}</strong>
-              </p>
-            </div>
-
-            <div className="task-actions">
-              <button
-                className="start-timer-btn"
-                onClick={() => handleStartTimer(task.id)}
-              >
-                Start Timer
-              </button>
-
-              <button className="edit-task-btn" aria-label="Edit task">
-                ✎
-              </button>
-
-              <button
-                className="delete-task-btn"
-                aria-label="Delete task"
-                onClick={() => handleDelete(task.id)}
-              >
-                🗑
-              </button>
-            </div>
-          </article>
-        ))}
+        {!isLoading &&
+          filteredTasks.map((task) => (
+            <TaskCard
+              key={task.id}
+              task={task}
+              onStartTimer={handleStartTimer}
+              onCompleteTask={handleCompleteTask}
+              onDeleteTask={handleDelete}
+            />
+          ))}
       </section>
+
+      {isModalOpen && (
+        <div className="task-modal-overlay">
+          <div className="task-modal">
+            <div className="task-modal-header">
+              <h2>Create Task</h2>
+              <p>Add a task for your next focus session.</p>
+            </div>
+
+            <form className="task-modal-form" onSubmit={handleCreateTask}>
+              <div className="modal-field full">
+                <label>Task Title</label>
+                <input
+                  type="text"
+                  placeholder="e.g., Software Design Documentation"
+                  value={newTask.title}
+                  onChange={(event) =>
+                    setNewTask((prev) => ({
+                      ...prev,
+                      title: event.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              <div className="modal-field full">
+                <label>Description</label>
+                <textarea
+                  placeholder="Optional description"
+                  value={newTask.description}
+                  onChange={(event) =>
+                    setNewTask((prev) => ({
+                      ...prev,
+                      description: event.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              <div className="modal-field">
+                <label>Priority</label>
+                <select
+                  value={newTask.priority}
+                  onChange={(event) =>
+                    setNewTask((prev) => ({
+                      ...prev,
+                      priority: event.target.value as "" | Priority,
+                    }))
+                  }
+                >
+                  <option value="">Select priority</option>
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                </select>
+              </div>
+
+              <div className="modal-field">
+                <label>Status</label>
+                <select
+                  value={newTask.status}
+                  onChange={(event) =>
+                    setNewTask((prev) => ({
+                      ...prev,
+                      status: event.target.value as "" | TaskStatus,
+                    }))
+                  }
+                >
+                  <option value="">Select status</option>
+                  <option value="Pending">Pending</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Blocked">Blocked</option>
+                </select>
+              </div>
+
+              <div className="modal-field">
+                <label>Pomodoros</label>
+                <select
+                  value={newTask.pomodoros}
+                  onChange={(event) =>
+                    setNewTask((prev) => ({
+                      ...prev,
+                      pomodoros: event.target.value,
+                    }))
+                  }
+                >
+                  <option value="">Select count</option>
+                  <option value="1">1 Pomodoro</option>
+                  <option value="2">2 Pomodoros</option>
+                  <option value="3">3 Pomodoros</option>
+                  <option value="4">4 Pomodoros</option>
+                  <option value="5">5 Pomodoros</option>
+                  <option value="6">6 Pomodoros</option>
+                  <option value="7">7 Pomodoros</option>
+                  <option value="8">8 Pomodoros</option>
+                </select>
+              </div>
+
+              <div className="modal-field">
+                <label>Deadline</label>
+                <input
+                  type="date"
+                  value={newTask.deadline}
+                  onChange={(event) =>
+                    setNewTask((prev) => ({
+                      ...prev,
+                      deadline: event.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              <div className="task-modal-actions">
+                <button
+                  type="button"
+                  className="modal-cancel-btn"
+                  onClick={handleCloseModal}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="modal-create-btn"
+                  disabled={isCreating}
+                >
+                  {isCreating ? "Creating..." : "Create"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

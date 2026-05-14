@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional, List, Union, Dict, Any
-from datetime import datetime
+from typing import Optional, List, Dict, Any
+from datetime import datetime, date
 
 
 class TaskBase(BaseModel):
@@ -13,6 +13,7 @@ class TaskBase(BaseModel):
     parent_id: Optional[int] = None
     color_code: Optional[str] = None
     estimated_duration: Optional[int] = None
+    deadline: Optional[date] = None
 
 
 class TaskCreate(TaskBase):
@@ -29,6 +30,7 @@ class TaskUpdate(BaseModel):
     parent_id: Optional[int] = None
     color_code: Optional[str] = None
     estimated_duration: Optional[int] = None
+    deadline: Optional[date] = None
 
 
 class Task(TaskBase):
