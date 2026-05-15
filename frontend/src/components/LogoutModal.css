@@ -1,0 +1,83 @@
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.logout-modal {
+  position: relative;
+  width: 400px;
+  height: 200px;
+  background: #FFFFFF;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.logout-icon-bg {
+  width: 60px;
+  height: 60px;
+  background: #003366; 
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.logout-title {
+  margin-top: 20px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: #000000;
+  text-align: center;
+}
+
+.button-container {
+  display: flex;
+  flex-direction: row;
+  gap: 15px;
+  margin-top: 25px;
+}
+
+.btn-cancel {
+  width: 86px;
+  height: 37px;
+  background: #708090;
+  border-radius: 10px;
+  border: none;
+  color: #FFFFFF;
+  cursor: pointer;
+  font-family: 'Inter';
+  font-size: 14px;
+  transition: opacity 0.2s;
+}
+
+.btn-logout {
+  width: 93px;
+  height: 37px;
+  background: #003366;
+  border-radius: 10px;
+  border: none;
+  color: #FFFFFF;
+  cursor: pointer;
+  font-family: 'Inter';
+  font-size: 14px;
+  transition: opacity 0.2s;
+}
+
+.btn-cancel:hover, .btn-logout:hover {
+  opacity: 0.85;
+}
