@@ -3,7 +3,7 @@ import type { Task } from "../types/taskTypes";
 type TaskCardProps = {
   task: Task;
   onStartTimer: (id: number) => void;
-  onCompleteTask: (id: number) => void;
+  onEditTask: (task: Task) => void;
   onDeleteTask: (id: number) => void;
 };
 
@@ -24,7 +24,7 @@ const getStatusClassName = (status: string) => {
 function TaskCard({
   task,
   onStartTimer,
-  onCompleteTask,
+  onEditTask,
   onDeleteTask,
 }: TaskCardProps) {
   return (
@@ -70,10 +70,10 @@ function TaskCard({
 
         <button
           className="edit-task-btn"
-          aria-label="Complete task"
-          onClick={() => onCompleteTask(task.id)}
+          aria-label="Edit task"
+          onClick={() => onEditTask(task)}
         >
-          ✓
+          ✎
         </button>
 
         <button

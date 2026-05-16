@@ -17,6 +17,7 @@ import type {
 
 import TaskFilterBar from "../components/TaskFilterBar";
 import TaskCard from "../components/TaskCard";
+import TaskModal from "../components/TaskModal";
 
 import type {
   FilterStatus,
@@ -64,25 +65,35 @@ const mapTaskFromBackend = (task: BackendTask): Task => ({
   createdAt: task.created_at,
 });
 
+const emptyTaskForm: NewTaskForm = {
+  title: "",
+  description: "",
+  priority: "",
+  status: "",
+  pomodoros: "",
+  deadline: "",
+};
+
 function Tasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
+
   const [priorityFilter, setPriorityFilter] = useState<"All" | Priority>("All");
   const [statusFilter, setStatusFilter] = useState<FilterStatus>("All");
   const [sortBy, setSortBy] = useState<SortOption>("Most Recent");
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+
+  const [newTask, setNewTask] = useState<NewTaskForm>(emptyTaskForm);
+  const [editTask, setEditTask] = useState<NewTaskForm>(emptyTaskForm);
+
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
-  const [error, setError] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  const [newTask, setNewTask] = useState<NewTaskForm>({
-    title: "",
-    description: "",
-    priority: "",
-    status: "",
-    pomodoros: "",
-    deadline: "",
-  });
+  const [error, setError] = useState("");
 
   const totalTasks = tasks.length;
 
@@ -108,7 +119,9 @@ function Tasks() {
       setError("");
 
       const backendTasks = await getTasks();
-      setTasks(backendTasks.map(mapTaskFromBackend));
+      const mappedTasks = backendTasks.map(mapTaskFromBackend);
+
+      setTasks(mappedTasks);
     } catch (err) {
       console.error(err);
       setError("Unable to load tasks. Please make sure you are logged in.");
@@ -161,36 +174,56 @@ function Tasks() {
     return result;
   }, [tasks, priorityFilter, statusFilter, sortBy]);
 
-  const handleOpenModal = () => {
-    setIsModalOpen(true);
+  const handleOpenAddModal = () => {
+    setNewTask(emptyTaskForm);
+    setIsAddModalOpen(true);
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
+  const handleCloseAddModal = () => {
+    setIsAddModalOpen(false);
+    setNewTask(emptyTaskForm);
+  };
 
-    setNewTask({
-      title: "",
-      description: "",
-      priority: "",
-      status: "",
-      pomodoros: "",
-      deadline: "",
+  const handleOpenEditModal = (task: Task) => {
+    setSelectedTask(task);
+
+    setEditTask({
+      title: task.title,
+      description: task.description ?? "",
+      priority: task.priority,
+      status: task.status,
+      pomodoros: String(task.pomodoros),
+      deadline: task.deadline,
     });
+
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setSelectedTask(null);
+    setEditTask(emptyTaskForm);
+  };
+
+  const validateTaskForm = (formData: NewTaskForm) => {
+    if (
+      !formData.title.trim() ||
+      !formData.priority ||
+      !formData.status ||
+      !formData.pomodoros ||
+      !formData.deadline
+    ) {
+      alert("Please complete all required fields.");
+      return false;
+    }
+
+    return true;
   };
 
   const handleCreateTask = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (
-      !newTask.title.trim() ||
-      !newTask.priority ||
-      !newTask.status ||
-      !newTask.pomodoros ||
-      !newTask.deadline
-    ) {
-      alert("Please complete all required fields.");
-      return;
-    }
+    if (!validateTaskForm(newTask)) return;
 
     try {
       setIsCreating(true);
@@ -212,12 +245,52 @@ function Tasks() {
       };
 
       setTasks((prev) => [taskWithDeadline, ...prev]);
-      handleCloseModal();
+      handleCloseAddModal();
     } catch (err) {
       console.error(err);
       alert("Failed to create task.");
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleUpdateTask = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!selectedTask) return;
+    if (!validateTaskForm(editTask)) return;
+
+    try {
+      setIsUpdating(true);
+
+      const updatedBackendTask = await updateTask(selectedTask.id, {
+        title: editTask.title.trim(),
+        description: editTask.description.trim() || null,
+        priority: priorityToBackend(editTask.priority),
+        status: statusToBackend(editTask.status),
+        estimated_duration: Number(editTask.pomodoros),
+        deadline: editTask.deadline,
+      });
+
+      const mappedUpdatedTask = mapTaskFromBackend(updatedBackendTask);
+
+      const updatedTaskWithDeadline: Task = {
+        ...mappedUpdatedTask,
+        deadline: updatedBackendTask.deadline ?? editTask.deadline,
+      };
+
+      setTasks((prev) =>
+        prev.map((task) =>
+          task.id === selectedTask.id ? updatedTaskWithDeadline : task
+        )
+      );
+
+      handleCloseEditModal();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update task.");
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -245,33 +318,10 @@ function Tasks() {
     }
   };
 
-  const handleCompleteTask = async (id: number) => {
-    try {
-      const updatedBackendTask = await updateTask(id, {
-        status: "completed",
-      });
-
-      const updatedTask = mapTaskFromBackend(updatedBackendTask);
-
-      setTasks((prev) =>
-        prev.map((task) =>
-          task.id === id
-            ? {
-                ...updatedTask,
-                deadline: updatedTask.deadline || task.deadline,
-              }
-            : task
-        )
-      );
-    } catch (err) {
-      console.error(err);
-      alert("Failed to complete task.");
-    }
-  };
-
   const handleDelete = async (id: number) => {
     try {
       await deleteTask(id);
+
       setTasks((prev) => prev.filter((task) => task.id !== id));
     } catch (err) {
       console.error(err);
@@ -289,6 +339,7 @@ function Tasks() {
       <section className="tasks-stats-grid">
         <div className="task-stat-card">
           <div className="task-stat-icon total">▣</div>
+
           <div>
             <p>Total Tasks</p>
             <h2>{totalTasks}</h2>
@@ -297,6 +348,7 @@ function Tasks() {
 
         <div className="task-stat-card">
           <div className="task-stat-icon completed">✓</div>
+
           <div>
             <p>Completed</p>
             <h2>{completedTasks}</h2>
@@ -305,6 +357,7 @@ function Tasks() {
 
         <div className="task-stat-card">
           <div className="task-stat-icon progress">◌</div>
+
           <div>
             <p>In Progress</p>
             <h2>{inProgressTasks}</h2>
@@ -313,6 +366,7 @@ function Tasks() {
 
         <div className="task-stat-card">
           <div className="task-stat-icon pending">!</div>
+
           <div>
             <p>Pending</p>
             <h2>{pendingTasks}</h2>
@@ -327,157 +381,51 @@ function Tasks() {
         onPriorityChange={setPriorityFilter}
         onStatusChange={setStatusFilter}
         onSortChange={setSortBy}
-        onAddTask={handleOpenModal}
+        onAddTask={handleOpenAddModal}
       />
 
       {isLoading && <p className="tasks-message">Loading tasks...</p>}
+
       {error && <p className="tasks-message error">{error}</p>}
+
+      {!isLoading && !error && filteredTasks.length === 0 && (
+        <p className="tasks-message">No tasks found.</p>
+      )}
 
       <section className="tasks-grid">
         {!isLoading &&
+          !error &&
           filteredTasks.map((task) => (
             <TaskCard
               key={task.id}
               task={task}
               onStartTimer={handleStartTimer}
-              onCompleteTask={handleCompleteTask}
+              onEditTask={handleOpenEditModal}
               onDeleteTask={handleDelete}
             />
           ))}
       </section>
 
-      {isModalOpen && (
-        <div className="task-modal-overlay">
-          <div className="task-modal">
-            <div className="task-modal-header">
-              <h2>Create Task</h2>
-              <p>Add a task for your next focus session.</p>
-            </div>
+      {isAddModalOpen && (
+        <TaskModal
+          mode="create"
+          formData={newTask}
+          isSubmitting={isCreating}
+          onClose={handleCloseAddModal}
+          onSubmit={handleCreateTask}
+          onChange={setNewTask}
+        />
+      )}
 
-            <form className="task-modal-form" onSubmit={handleCreateTask}>
-              <div className="modal-field full">
-                <label>Task Title</label>
-                <input
-                  type="text"
-                  placeholder="e.g., Software Design Documentation"
-                  value={newTask.title}
-                  onChange={(event) =>
-                    setNewTask((prev) => ({
-                      ...prev,
-                      title: event.target.value,
-                    }))
-                  }
-                />
-              </div>
-
-              <div className="modal-field full">
-                <label>Description</label>
-                <textarea
-                  placeholder="Optional description"
-                  value={newTask.description}
-                  onChange={(event) =>
-                    setNewTask((prev) => ({
-                      ...prev,
-                      description: event.target.value,
-                    }))
-                  }
-                />
-              </div>
-
-              <div className="modal-field">
-                <label>Priority</label>
-                <select
-                  value={newTask.priority}
-                  onChange={(event) =>
-                    setNewTask((prev) => ({
-                      ...prev,
-                      priority: event.target.value as "" | Priority,
-                    }))
-                  }
-                >
-                  <option value="">Select priority</option>
-                  <option value="High">High</option>
-                  <option value="Medium">Medium</option>
-                  <option value="Low">Low</option>
-                </select>
-              </div>
-
-              <div className="modal-field">
-                <label>Status</label>
-                <select
-                  value={newTask.status}
-                  onChange={(event) =>
-                    setNewTask((prev) => ({
-                      ...prev,
-                      status: event.target.value as "" | TaskStatus,
-                    }))
-                  }
-                >
-                  <option value="">Select status</option>
-                  <option value="Pending">Pending</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Completed">Completed</option>
-                  <option value="Blocked">Blocked</option>
-                </select>
-              </div>
-
-              <div className="modal-field">
-                <label>Pomodoros</label>
-                <select
-                  value={newTask.pomodoros}
-                  onChange={(event) =>
-                    setNewTask((prev) => ({
-                      ...prev,
-                      pomodoros: event.target.value,
-                    }))
-                  }
-                >
-                  <option value="">Select count</option>
-                  <option value="1">1 Pomodoro</option>
-                  <option value="2">2 Pomodoros</option>
-                  <option value="3">3 Pomodoros</option>
-                  <option value="4">4 Pomodoros</option>
-                  <option value="5">5 Pomodoros</option>
-                  <option value="6">6 Pomodoros</option>
-                  <option value="7">7 Pomodoros</option>
-                  <option value="8">8 Pomodoros</option>
-                </select>
-              </div>
-
-              <div className="modal-field">
-                <label>Deadline</label>
-                <input
-                  type="date"
-                  value={newTask.deadline}
-                  onChange={(event) =>
-                    setNewTask((prev) => ({
-                      ...prev,
-                      deadline: event.target.value,
-                    }))
-                  }
-                />
-              </div>
-
-              <div className="task-modal-actions">
-                <button
-                  type="button"
-                  className="modal-cancel-btn"
-                  onClick={handleCloseModal}
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="submit"
-                  className="modal-create-btn"
-                  disabled={isCreating}
-                >
-                  {isCreating ? "Creating..." : "Create"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {isEditModalOpen && selectedTask && (
+        <TaskModal
+          mode="edit"
+          formData={editTask}
+          isSubmitting={isUpdating}
+          onClose={handleCloseEditModal}
+          onSubmit={handleUpdateTask}
+          onChange={setEditTask}
+        />
       )}
     </main>
   );
