@@ -158,6 +158,17 @@
 .profile-name { font-weight: 700; font-size: 14px; }
 .profile-email { font-weight: 400; font-size: 14px; }
 
+.profile-chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.profile-chevron.rotated {
+  transform: rotate(180deg);
+}
+
 .profile-dropdown-menu {
   position: absolute;
   bottom: 55px; 

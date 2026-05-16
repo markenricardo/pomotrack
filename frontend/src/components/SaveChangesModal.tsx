@@ -1,20 +1,12 @@
 import React from 'react';
-import './SaveModal.css';
+import './SaveChangesModal.css';
 
 interface SaveModalProps {
   isOpen: boolean;
   onClose: () => void;
-  title?: string;
-  message?: string;
 }
 
-const SaveModal: React.FC<SaveModalProps> = ({ 
-  isOpen, 
-  onClose,
-  title = "Changes Saved!",
-  message = "Your profile settings have been updated successfully."
-}) => {
-
+const SaveModal: React.FC<SaveModalProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
@@ -27,8 +19,8 @@ const SaveModal: React.FC<SaveModalProps> = ({
         <div className="modal-icon">
           <div className="checkmark"></div>
         </div>
-        <div className="modal-title">{title}</div>
-        <div className="modal-message">{message}</div>
+        <div className="modal-title">Changes Saved!</div>
+        <div className="modal-message">Your profile settings have been updated successfully.</div>
       </div>
     </div>
   );

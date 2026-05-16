@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Timer,
@@ -11,12 +11,18 @@ import {
   LogOut,
   ChevronDown,
 } from "lucide-react";
+import LogoutModal from "./LogoutModal";
 import "./Sidebar.css";
 
 // --- SUB-COMPONENT: ProfileDropdown ---
-const ProfileDropdown = () => {
+interface ProfileDropdownProps {
+  onLogoutClick: () => void;
+}
+
+const ProfileDropdown = ({ onLogoutClick }: ProfileDropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -36,11 +42,23 @@ const ProfileDropdown = () => {
       {/* Dropdown Menu */}
       {isOpen && (
         <div className="profile-dropdown-menu">
-          <div className="profile-dropdown-option">
+          <div 
+            className="profile-dropdown-option"
+            onClick={() => {
+              setIsOpen(false);
+              navigate("/settings");
+            }}
+          >
             <Settings size={20} />
             <span>Settings</span>
           </div>
-          <div className="profile-dropdown-option">
+          <div 
+            className="profile-dropdown-option"
+            onClick={() => {
+              setIsOpen(false);
+              onLogoutClick();
+            }}
+          >
             <LogOut size={20} />
             <span>Logout</span>
           </div>
@@ -67,6 +85,9 @@ const ProfileDropdown = () => {
 
 // --- MAIN SIDEBAR COMPONENT ---
 function Sidebar() {
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const navigate = useNavigate();
+
   const mainNav = [
     { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
     { name: "Timer", path: "/timer", icon: Timer },
@@ -78,6 +99,11 @@ function Sidebar() {
     { name: "Analytics", path: "/analytics", icon: BarChart3 },
     { name: "Achievements", path: "/achievements", icon: Trophy },
   ];
+
+  const handleLogoutConfirm = () => {
+    setShowLogoutModal(false);
+    navigate("/login"); 
+  };
 
   return (
     <aside className="sidebar">
@@ -149,7 +175,15 @@ function Sidebar() {
           <p className="streak-subtitle">5/5 days completed</p>
         </div>
       </div>
-      <ProfileDropdown />
+      
+      <ProfileDropdown onLogoutClick={() => setShowLogoutModal(true)} />
+
+      {showLogoutModal && (
+        <LogoutModal 
+          onClose={() => setShowLogoutModal(false)} 
+          onConfirm={handleLogoutConfirm} 
+        />
+      )}
     </aside>
   );
 }
