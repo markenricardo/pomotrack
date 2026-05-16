@@ -2,6 +2,7 @@
 
 from sqlalchemy import (
     Column,
+    Date,
     Integer,
     String,
     Text,
@@ -60,6 +61,7 @@ class Task(Base):
     path = Column(String, index=True)  # PostgreSQL LTREE type
     color_code = Column(String(9))
     estimated_duration = Column(Integer)  # in seconds
+    deadline = Column(Date, nullable=True)
     created_at = Column(
         DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP")
     )
@@ -81,6 +83,8 @@ class Task(Base):
         "PomodoroTaskAssociation", back_populates="task"
     )
     history = relationship("TaskHistory", back_populates="task")
+    
+    
 
     __table_args__ = (CheckConstraint("parent_id != id", name="valid_parent"),)
 
