@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { User, Key, Timer, Sliders } from "lucide-react"; 
 import SaveModal from "../components/SaveChangesModal"; 
+import { getSettings, updateSettings } from "../api/settingsApi";
+import type { UISettings } from "../api/settingsApi";
 import "../styles/Settings.css";
 
 function Settings() {
-  // Profile Information State
+  // Profile Information State 
   const [fullName, setFullName] = useState("First Name Surname");
   const [email, setEmail] = useState("fnsn@gmail.com");
 
@@ -13,17 +15,43 @@ function Settings() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // Timer Settings State
+  // Timer and Preferences State 
   const [focusDuration, setFocusDuration] = useState("25");
   const [shortBreak, setShortBreak] = useState("5");
   const [longBreak, setLongBreak] = useState("15");
-
-  // Preferences State
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
+  // Global Page Fetch Status Indicators
+  const [isLoading, setIsLoading] = useState(true);
+  const [apiError, setApiError] = useState("");
+
   // Global Modal Visibility Toggle
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Fetch saved preferences on component initialization mount
+  useEffect(() => {
+    const loadSavedPreferences = async () => {
+      try {
+        setIsLoading(true);
+        setApiError("");
+        const data = await getSettings();
+        
+        // Sync states cleanly with backend responses
+        setFocusDuration(String(data.focusDuration));
+        setShortBreak(String(data.shortBreakDuration));
+        setLongBreak(String(data.longBreakDuration));
+        setTheme(data.theme === "dark" ? "dark" : "light");
+        setNotificationsEnabled(data.soundEnabled);
+      } catch (err) {
+        console.error("Error pulling configurations from server:", err);
+        setApiError("Unable to retrieve user preferences from the server.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadSavedPreferences();
+  }, []);
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,17 +68,50 @@ function Settings() {
     setIsModalOpen(true);
   };
 
+  // Centralized backend persistence hub handler
+  const savePreferencesToBackend = async (updatedFields: Partial<UISettings>) => {
+    try {
+      setApiError("");
+      
+      // Merge values against active state parameters to meet structural schema needs
+      const standardPayload: UISettings = {
+        focusDuration: parseInt(focusDuration) || 25,
+        shortBreakDuration: parseInt(shortBreak) || 5,
+        longBreakDuration: parseInt(longBreak) || 15,
+        longBreakInterval: 4, // Default schema mapping requirement metric
+        theme: theme,
+        soundEnabled: notificationsEnabled,
+        ...updatedFields
+      };
+
+      await updateSettings(standardPayload);
+      setIsModalOpen(true); // Fire up your signature custom success modal!
+    } catch (err) {
+      console.error("Error synchronizing configuration update patch payload:", err);
+      setApiError("Failed to update preferences on the backend server.");
+    }
+  };
+
   const handleSaveTimer = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Saving timer settings...", { focusDuration, shortBreak, longBreak });
-    setIsModalOpen(true);
+    savePreferencesToBackend({
+      focusDuration: parseInt(focusDuration) || 25,
+      shortBreakDuration: parseInt(shortBreak) || 5,
+      longBreakDuration: parseInt(longBreak) || 15
+    });
   };
 
   const handleSavePreferences = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Saving preferences...", { theme, notificationsEnabled });
-    setIsModalOpen(true);
+    savePreferencesToBackend({
+      theme: theme,
+      soundEnabled: notificationsEnabled
+    });
   };
+
+  if (isLoading) {
+    return <div style={{ padding: "40px", textAlign: "center", color: "#6b7280" }}>Loading system configuration profile...</div>;
+  }
 
   return (
     <div className="settings-page">
@@ -59,6 +120,12 @@ function Settings() {
         <h1>Settings</h1>
         <p>Update your account details and configure system preferences to suit your workflow.</p>
       </header>
+
+      {apiError && (
+        <div style={{ backgroundColor: "#fee2e2", color: "#ef4444", padding: "12px 16px", borderRadius: "8px", marginBottom: "20px", fontSize: "14px" }}>
+          ⚠ {apiError}
+        </div>
+      )}
 
       <div className="settings-cards-row">
         {/* Profile Information Card */}

@@ -1,16 +1,18 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import '../styles/History.css';
+import { getHistory } from '../api/historyApi';
+import type { BackendHistorySession } from '../api/historyApi';
 
 // --- SUB-COMPONENT: FilterDropdown ---
 interface FilterProps {
   label: string;
   options: string[];
-  placeholder: string;
+  selected: string;
+  onChange: (val: string) => void;
 }
 
-const FilterDropdown: React.FC<FilterProps> = ({ label, options, placeholder }) => {
+const FilterDropdown: React.FC<FilterProps> = ({ label, options, selected, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selected, setSelected] = useState(placeholder);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -45,7 +47,7 @@ const FilterDropdown: React.FC<FilterProps> = ({ label, options, placeholder }) 
                 className="dropdown-option"
                 onClick={(e) => {
                   e.stopPropagation(); 
-                  setSelected(option);
+                  onChange(option);
                   setIsOpen(false);
                 }}
               >
@@ -60,8 +62,38 @@ const FilterDropdown: React.FC<FilterProps> = ({ label, options, placeholder }) 
 };
 
 // --- SUB-COMPONENT: TableRow ---
-const TableRow = ({ data }: { data: any }) => {
+interface TableRowProps {
+  session: BackendHistorySession;
+}
+
+const TableRow: React.FC<TableRowProps> = ({ session }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Formatting timestamps dynamically
+  const dateFormatted = new Date(session.start_time).toLocaleString();
+  
+  // Extract primary task association title safely
+  const mainTaskTitle = session.tasks && session.tasks.length > 0 
+    ? session.tasks[0].title 
+    : "No linked task";
+
+  const durationFormatted = `${Math.round(session.duration / 60)} mins`;
+  
+  // Translate database values back to clean UI typography labels
+  const typeDisplay = session.session_type === 'work' ? 'Focus' 
+    : session.session_type === 'short_break' ? 'Short Break' 
+    : 'Long Break';
+
+  const statusDisplay = session.completed ? 'Completed' : 'Unfinished';
+
+  // Calculate session completion percentages cleanly
+  const completionRate = session.duration > 0 && session.actual_duration != null
+    ? `${Math.min(100, Math.round((session.actual_duration / session.duration) * 100))}%`
+    : session.completed ? '100%' : '0%';
+
+  // Aggregate notes appended across task records
+  const sessionNotes = session.tasks && session.tasks.map(t => t.notes).filter(Boolean).join("; ")
+    || "No session notes captured.";
 
   return (
     <div 
@@ -69,16 +101,21 @@ const TableRow = ({ data }: { data: any }) => {
       onClick={() => setIsExpanded(!isExpanded)}
     >
       <div className="row-main-content">
-        <div className="col-date">{data.date}</div>
-        <div className="col-task">{data.task}</div>
-        <div className="col-duration">{data.duration}</div>
-        <div className="col-type">{data.type}</div>
-        <div className="col-status">{data.status}</div>
-        <div className="col-rate">{data.rate}</div>
+        <div className="col-date">{dateFormatted}</div>
+        <div className="col-task">{mainTaskTitle}</div>
+        <div className="col-duration">{durationFormatted}</div>
+        <div className="col-type">{typeDisplay}</div>
+        <div className="col-status">{statusDisplay}</div>
+        <div className="col-rate">{completionRate}</div>
       </div>
       {isExpanded && (
         <div className="row-notes">
-          Session Notes: {data.notes}
+          <strong>Session Notes:</strong> {sessionNotes}
+          {session.interruption_reason && (
+            <p style={{ margin: '4px 0 0 0', color: '#ff4d4f' }}>
+              <strong>Interruption Reason:</strong> "{session.interruption_reason}"
+            </p>
+          )}
         </div>
       )}
     </div>
@@ -87,27 +124,97 @@ const TableRow = ({ data }: { data: any }) => {
 
 // --- MAIN PAGE COMPONENT ---
 function History() {
-  // Replace this with your real backend data later
-  const dummyData = [
-    { 
-      date: '2026-05-15 13:00:00', 
-      task: 'PUP Library Database Sync', 
-      duration: '25 minutes', 
-      type: 'Focus', 
-      status: 'Completed', 
-      rate: '100%', 
-      notes: 'Finalized the SQL schema for student logs.' 
-    },
-    { 
-      date: '2026-05-15 14:00:00', 
-      task: 'AIFMS UI Debugging', 
-      duration: '25 minutes', 
-      type: 'Focus', 
-      status: 'Unfinished', 
-      rate: '85%', 
-      notes: 'Emergeny. Had to attend to a family matter.' 
-    },
-  ];
+  const [sessions, setSessions] = useState<BackendHistorySession[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // Live Dropdown Selection States
+  const [dateFilter, setDateFilter] = useState("All Dates");
+  const [typeFilter, setTypeFilter] = useState("All Types");
+  const [statusFilter, setStatusFilter] = useState("All Status");
+  const [sortBy, setSortBy] = useState("Latest");
+
+  // Custom Inline Date Filter Boundaries
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
+  // Hook live query requests straight from backend on mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        setError("");
+        const data = await getHistory();
+        setSessions(data);
+      } catch (err) {
+        console.error("Error pulling session data:", err);
+        setError("Unable to load focus history. Make sure your server is active.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  // Compute live local filters against database array
+  const filteredSessions = useMemo(() => {
+    let result = [...sessions];
+
+    // 1. Session Type Filter Processing
+    if (typeFilter !== "All Types") {
+      result = result.filter(s => {
+        if (typeFilter === "Focus") return s.session_type === "work";
+        if (typeFilter === "Short Break") return s.session_type === "short_break";
+        if (typeFilter === "Long Break") return s.session_type === "long_break";
+        return true;
+      });
+    }
+
+    // 2. Status Filter Processing
+    if (statusFilter !== "All Status") {
+      result = result.filter(s => {
+        if (statusFilter === "Completed") return s.completed === true;
+        if (statusFilter === "Unfinished") return s.completed === false;
+        return true;
+      });
+    }
+
+    // 3. Date & Range Engine Processing
+    if (dateFilter !== "All Dates") {
+      const now = new Date();
+      result = result.filter(s => {
+        const sessionDate = new Date(s.start_time);
+        if (dateFilter === "Today") {
+          return sessionDate.toDateString() === now.toDateString();
+        }
+        if (dateFilter === "This Week") {
+          const oneWeekAgo = new Date();
+          oneWeekAgo.setDate(now.getDate() - 7);
+          return sessionDate >= oneWeekAgo;
+        }
+        if (dateFilter === "This Month") {
+          return sessionDate.getMonth() === now.getMonth() && sessionDate.getFullYear() === now.getFullYear();
+        }
+        if (dateFilter === "Custom Date") {
+          if (!startDate && !endDate) return true; // Show all if boundaries aren't selected yet
+          const targetTime = sessionDate.getTime();
+          const startTime = startDate ? new Date(`${startDate}T00:00:00`).getTime() : 0;
+          const endTime = endDate ? new Date(`${endDate}T23:59:59`).getTime() : Number.MAX_SAFE_INTEGER;
+          return targetTime >= startTime && targetTime <= endTime;
+        }
+        return true;
+      });
+    }
+
+    // 4. Sort Sequence Processing
+    if (sortBy === "Latest") {
+      result.sort((a, b) => b.id - a.id);
+    } else if (sortBy === "Oldest") {
+      result.sort((a, b) => a.id - b.id);
+    }
+
+    return result;
+  }, [sessions, typeFilter, statusFilter, dateFilter, sortBy, startDate, endDate]);
 
   return (
     <div className="history-page">
@@ -116,31 +223,68 @@ function History() {
         <p>Review and analyze your past focus sessions and completion history.</p>
       </header>
 
-      {/* Filter Section */}
-      <section className="filter-container">
+      {/* Filter Container Control Grid Row */}
+      <section className="filter-container" style={{ alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px' }}>
         <FilterDropdown 
           label="All Date" 
-          placeholder="All Date" 
+          selected={dateFilter}
+          onChange={(val) => {
+            setDateFilter(val);
+            if (val !== "Custom Date") {
+              setStartDate("");
+              setEndDate("");
+            }
+          }}
           options={['All Dates', 'Today', 'This Week', 'This Month', 'Custom Date']} 
         />
+        
+        {/* Conditional Custom Date Inline Ranges */}
+        {dateFilter === "Custom Date" && (
+          <div className="custom-date-inputs-wrapper" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <div className="filter-group">
+              <label>Start Date</label>
+              <input 
+                type="date" 
+                className="filter-select-custom default" 
+                style={{ padding: '8px 12px', color: '#111827', cursor: 'text' }}
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </div>
+            <div className="filter-group">
+              <label>End Date</label>
+              <input 
+                type="date" 
+                className="filter-select-custom default" 
+                style={{ padding: '8px 12px', color: '#111827', cursor: 'text' }}
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </div>
+          </div>
+        )}
+
         <FilterDropdown 
           label="Session Type" 
-          placeholder="All Types" 
+          selected={typeFilter}
+          onChange={setTypeFilter}
           options={['All Types', 'Focus', 'Short Break', 'Long Break']} 
         />
         <FilterDropdown 
           label="Status" 
-          placeholder="All Status" 
-          options={['All Status','Completed', 'Unfinished']} 
+          selected={statusFilter}
+          onChange={setStatusFilter}
+          options={['All Status', 'Completed', 'Unfinished']} 
         />
         <FilterDropdown 
           label="Sort by" 
-          placeholder="Latest" 
+          selected={sortBy}
+          onChange={setSortBy}
           options={['Latest', 'Oldest']} 
         />
       </section>
 
-      {/* Table Section */}
+      {/* History Layout Table Display Grid */}
       <div className="history-table-container">
         <div className="history-table-header">
           <div className="col-date">Date & Time</div>
@@ -152,8 +296,17 @@ function History() {
         </div>
 
         <div className="history-table-body">
-          {dummyData.map((row, index) => (
-            <TableRow key={index} data={row} />
+          {isLoading && <p style={{ padding: '20px', textAlign: 'center', color: '#666' }}>Fetching focus logs...</p>}
+          {error && <p style={{ padding: '20px', textAlign: 'center', color: '#ff4d4f' }}>{error}</p>}
+          
+          {!isLoading && !error && filteredSessions.length === 0 && (
+            <p style={{ padding: '24px', textAlign: 'center', color: '#6b7280' }}>
+              No session logs match your criteria.
+            </p>
+          )}
+
+          {!isLoading && !error && filteredSessions.map((session) => (
+            <TableRow key={session.id} session={session} />
           ))}
         </div>
       </div>
