@@ -2,7 +2,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.routes import auth, users, tasks, pomodoros, dashboard
+from app.api.routes import auth, users, tasks, pomodoros, dashboard, history, settings as settings_router
 from app.config import settings
 
 app = FastAPI(
@@ -29,6 +29,8 @@ app.include_router(users.router, prefix=settings.API_V1_STR)
 app.include_router(tasks.router, prefix=settings.API_V1_STR)
 app.include_router(pomodoros.router, prefix=settings.API_V1_STR)
 app.include_router(dashboard.router, prefix=settings.API_V1_STR)
+app.include_router(history.router, prefix=settings.API_V1_STR)
+app.include_router(settings_router.router, prefix=settings.API_V1_STR)
 
 
 @app.get("/")
