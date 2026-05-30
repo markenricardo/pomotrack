@@ -1,0 +1,134 @@
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.save-modal {
+  position: relative;
+  width: 400px;
+  height: 200px;
+  background: #FFFFFF;
+  border-radius: 16px;
+  padding: 26px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  animation: scaleIn 0.3s ease;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.modal-close {
+  position: absolute;
+  right: 15px;
+  top: 15px;
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.3s;
+}
+
+.modal-close:hover {
+  opacity: 1;
+}
+
+.modal-close span {
+  position: absolute;
+  width: 100%;
+  height: 1.5px;
+  background: #BDBDBD;
+  top: 50%;
+  left: 0;
+}
+
+.modal-close span:first-child {
+  transform: rotate(45deg);
+}
+
+.modal-close span:last-child {
+  transform: rotate(-45deg);
+}
+
+.modal-icon {
+  position: absolute;
+  left: 50%;
+  top: 26px;
+  transform: translateX(-50%);
+  width: 70px;
+  height: 70px;
+  background: #003366;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkmark {
+  width: 20px;
+  height: 35px;
+  border: solid white;
+  border-width: 0 4px 4px 0;
+  transform: rotate(45deg);
+  margin-bottom: 5px;
+}
+
+.modal-title {
+  position: absolute;
+  left: 50%;
+  top: 112px;
+  transform: translateX(-50%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 29px;
+  color: #000000;
+  white-space: nowrap;
+}
+
+.modal-message {
+  position: absolute;
+  left: 23px;
+  right: 24px;
+  top: 157px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 17px;
+  color: #000000;
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  .save-modal {
+    width: 90%;
+    max-width: 400px;
+  }
+}
