@@ -1,164 +1,195 @@
-import React from 'react';
-import '../styles/Achievements.css'; 
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { 
-  Trophy, 
-  Flame, 
+  Star, 
+  Award, 
+  Zap, 
   Target, 
   Clock, 
-  CheckCircle2, 
-  Medal,
+  CheckCircle,
   Lock,
   Unlock
-} from 'lucide-react';
+} from "lucide-react";
+import '../styles/Achievements.css'; 
+
+interface XPProgress {
+  current_level_xp: number;
+  required_for_next: number;
+  remaining: number;
+}
+
+interface Stats {
+  total_pomodoros: number;
+  total_hours: number;
+}
+
+interface Badges {
+  first_session: boolean;
+  completed_5_pomodoros: boolean;
+  focused_10_hours: boolean;
+  task_finisher: boolean;
+}
+
+interface AchievementData {
+  level: number;
+  title: string;
+  total_xp: number;
+  xp_progress: XPProgress;
+  stats: Stats;
+  badges: Badges;
+}
 
 function Achievements() {
-  // Mock data based on the PDF requirements
-  const userProgress = {
-    level: 3,
-    title: "Focus Learner",
-    currentXP: 450,
-    requiredXP: 700,
-    currentStreak: 7,
-    totalBadges: 3,
-  };
+  const [data, setData] = useState<AchievementData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const xpPercentage = (userProgress.currentXP / userProgress.requiredXP) * 100;
+  useEffect(() => {
+    const fetchAchievements = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get('http://127.0.0.1:8000/api/v1/achievements', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        setData(response.data);
+      } catch (err) {
+        console.error("Error fetching achievements:", err);
+        setError("Failed to load achievements data.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const achievementsData = [
-    {
-      id: 1,
-      title: "First Focus Session",
-      description: "Successfully complete your very first Pomodoro session.",
-      icon: <Trophy size={28} strokeWidth={2.5} />,
-      colorClass: "yellow",
-      isUnlocked: true,
-    },
-    {
-      id: 2,
-      title: "Completed 5 Pomodoros",
-      description: "Finish 5 full Pomodoro intervals.",
-      icon: <Target size={28} strokeWidth={2.5} />,
-      colorClass: "blue",
-      isUnlocked: true,
-    },
-    {
-      id: 3,
-      title: "7-Day Study Streak",
-      description: "Maintain a daily focus streak for an entire week.",
-      icon: <Flame size={28} strokeWidth={2.5} />,
-      colorClass: "red",
-      isUnlocked: true,
-    },
-    {
-      id: 4,
-      title: "Focused for 10 Hours",
-      description: "Accumulate a total of 10 hours of pure focus time.",
-      icon: <Clock size={28} strokeWidth={2.5} />,
-      colorClass: "locked",
-      isUnlocked: false,
-    },
-    {
-      id: 5,
-      title: "Task Finisher",
-      description: "Mark 10 pending tasks as fully completed.",
-      icon: <CheckCircle2 size={28} strokeWidth={2.5} />,
-      colorClass: "locked",
-      isUnlocked: false,
-    },
-  ];
+    fetchAchievements();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="achievements-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <h2>Loading your progress...</h2>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="achievements-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <h2>{error || "Something went wrong."}</h2>
+      </div>
+    );
+  }
+
+  const progressPercentage = (data.xp_progress.current_level_xp / data.xp_progress.required_for_next) * 100;
 
   return (
     <div className="achievements-page">
       <div className="achievements-container">
-
-        {/* HEADER SECTION */}
+        
+        {/* HEADER */}
         <header className="page-header">
-          <h1>Achievements</h1>
-          <p>Track your progress, build streaks, and earn badges for your productivity.</p>
+          <h1>Your Achievements</h1>
+          <p>Level up by staying focused and completing your tasks.</p>
         </header>
 
-        {/* LEVEL & XP BANNER */}
+        {/* LEVEL & XP SECTION */}
         <section className="level-banner">
           <div className="level-header">
             <div className="level-title-block">
-              <p>Current Level: {userProgress.level}</p>
-              <h2>{userProgress.title}</h2>
+              <p>Level {data.level}</p>
+              <h2>{data.title}</h2>
             </div>
             <div className="xp-text">
-              <span>{userProgress.currentXP}</span> / {userProgress.requiredXP} XP
+              <span>{data.total_xp}</span> XP Total
             </div>
           </div>
           
           <div className="xp-bar-container">
-            <div 
-              className="xp-bar-fill" 
-              style={{ width: `${xpPercentage}%` }}
-            ></div>
+            <div className="xp-bar-fill" style={{ width: `${progressPercentage}%` }}></div>
           </div>
         </section>
 
-        {/* QUICK STATS */}
+        {/* QUICK STATS GRID */}
         <section className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-icon orange">
-              <Flame size={28} strokeWidth={2.5} />
-            </div>
-            <div className="stat-info">
-              <p>Current Streak</p>
-              <h3>{userProgress.currentStreak} Days</h3>
-            </div>
-          </div>
-
-          <div className="stat-card">
+           <div className="stat-card">
             <div className="stat-icon purple">
-              <Medal size={28} strokeWidth={2.5} />
+              <Star size={28} strokeWidth={2.5} />
             </div>
             <div className="stat-info">
-              <p>Total XP</p>
-              <h3>{userProgress.currentXP}</h3>
+              <p>Total Sessions</p>
+              <h3>{data.stats.total_pomodoros}</h3>
             </div>
           </div>
-
           <div className="stat-card">
             <div className="stat-icon blue">
-              <Trophy size={28} strokeWidth={2.5} />
+              <Award size={28} strokeWidth={2.5} />
             </div>
             <div className="stat-info">
-              <p>Badges Earned</p>
-              <h3>{userProgress.totalBadges}</h3>
+              <p>Lifetime Focus</p>
+              <h3>{data.stats.total_hours}h</h3>
             </div>
           </div>
         </section>
 
-        {/* BADGES GRID */}
-        <h2 className="section-title">Your Badges</h2>
-        
-        <section className="badges-grid">
-          {achievementsData.map((achievement) => (
-            <div 
-              key={achievement.id} 
-              className={`badge-card ${achievement.isUnlocked ? '' : 'locked'}`}
-            >
-              <div className={`badge-icon ${achievement.isUnlocked ? achievement.colorClass : ''}`}>
-                {achievement.icon}
-              </div>
-              
-              <div className="badge-details">
-                <h4>{achievement.title}</h4>
-                <p>{achievement.description}</p>
-                
-                <div className={`badge-status ${achievement.isUnlocked ? 'status-unlocked' : 'status-locked'}`}>
-                  {achievement.isUnlocked ? (
-                    <><Unlock size={14} /> Unlocked</>
-                  ) : (
-                    <><Lock size={14} /> Locked</>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
+        {/* BADGES & ACHIEVEMENTS GRID */}
+        <section>
+          <h2 className="section-title">Unlocked Badges</h2>
+          <div className="badges-grid">
+            
+            <BadgeCard 
+              unlocked={data.badges.first_session} 
+              icon={<Zap size={28} strokeWidth={2} />} 
+              colorClass="yellow"
+              title="First Session" 
+              desc="Completed your very first focus block." 
+            />
+            <BadgeCard 
+              unlocked={data.badges.completed_5_pomodoros} 
+              icon={<Target size={28} strokeWidth={2} />} 
+              colorClass="green"
+              title="Getting Serious" 
+              desc="Completed 5 total pomodoro sessions." 
+            />
+            <BadgeCard 
+              unlocked={data.badges.focused_10_hours} 
+              icon={<Clock size={28} strokeWidth={2} />} 
+              colorClass="red"
+              title="Deep Worker" 
+              desc="Logged over 10 hours of focus time." 
+            />
+            <BadgeCard 
+              unlocked={data.badges.task_finisher} 
+              icon={<CheckCircle size={28} strokeWidth={2} />} 
+              colorClass="yellow"
+              title="Task Finisher" 
+              desc="Completed 10 specific tasks." 
+            />
+
+          </div>
         </section>
 
+      </div>
+    </div>
+  );
+}
+
+// Reusable sub-component utilizing your specific CSS classes
+function BadgeCard({ unlocked, icon, colorClass, title, desc }: { unlocked: boolean, icon: React.ReactNode, colorClass: string, title: string, desc: string }) {
+  return (
+    <div className={`badge-card ${unlocked ? '' : 'locked'}`}>
+      <div className={`badge-icon ${colorClass}`}>
+        {icon}
+      </div>
+      
+      <div className="badge-details">
+        <h4>{title}</h4>
+        <p>{desc}</p>
+        
+        <div className={`badge-status ${unlocked ? 'status-unlocked' : 'status-locked'}`}>
+          {unlocked ? <Unlock size={14} /> : <Lock size={14} />}
+          {unlocked ? 'Unlocked' : 'Locked'}
+        </div>
       </div>
     </div>
   );
