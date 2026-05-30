@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import type { AnalyticsOverview, WeeklyData } from "../api/analyticsApi";
+import analyticsApi from "../api/analyticsApi";
 
-type TimePeriod = "Week" | "Month" | "All Time";
+type TimePeriod = "week" | "month" | "all_time";
 
 interface StatCard {
   label: string;
@@ -10,43 +12,40 @@ interface StatCard {
 }
 
 function Analytics() {
-  const [timePeriod, setTimePeriod] = useState<TimePeriod>("Week");
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>("week");
+  const [analytics, setAnalytics] = useState<AnalyticsOverview | null>(null);
+  const [weeklyData, setWeeklyData] = useState<WeeklyData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // Mock data - in production, this would come from the API
-  const stats: Record<TimePeriod, StatCard[]> = {
-    Week: [
-      { label: "Total Pomodoros", value: "42", unit: "sessions", change: "+12%" },
-      { label: "Focus Time", value: "17.5", unit: "hours", change: "+8%" },
-      { label: "Tasks Completed", value: "28", unit: "tasks", change: "+15%" },
-      { label: "Current Streak", value: "7", unit: "days", change: "🔥" },
-    ],
-    Month: [
-      { label: "Total Pomodoros", value: "168", unit: "sessions", change: "+24%" },
-      { label: "Focus Time", value: "70", unit: "hours", change: "+18%" },
-      { label: "Tasks Completed", value: "102", unit: "tasks", change: "+22%" },
-      { label: "Current Streak", value: "15", unit: "days", change: "🔥" },
-    ],
-    "All Time": [
-      { label: "Total Pomodoros", value: "856", unit: "sessions" },
-      { label: "Focus Time", value: "356.7", unit: "hours" },
-      { label: "Tasks Completed", value: "512", unit: "tasks" },
-      { label: "Best Streak", value: "42", unit: "days" },
-    ],
-  };
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        setLoading(true);
+        const [overviewData, weekData] = await Promise.all([
+          analyticsApi.getOverview(timePeriod),
+          analyticsApi.getWeeklyData(),
+        ]);
+        setAnalytics(overviewData);
+        setWeeklyData(weekData);
+        setError("");
+      } catch (err) {
+        console.error("Failed to fetch analytics:", err);
+        setError("Failed to load analytics data");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const currentStats = stats[timePeriod];
+    fetchAnalytics();
+  }, [timePeriod]);
 
-  const weeklyData = [
-    { day: "Mon", pomodoros: 8, focus: 3.3 },
-    { day: "Tue", pomodoros: 9, focus: 3.75 },
-    { day: "Wed", pomodoros: 6, focus: 2.5 },
-    { day: "Thu", pomodoros: 7, focus: 2.9 },
-    { day: "Fri", pomodoros: 8, focus: 3.3 },
-    { day: "Sat", pomodoros: 2, focus: 0.8 },
-    { day: "Sun", pomodoros: 2, focus: 0.8 },
-  ];
-
-  const maxPomodoros = Math.max(...weeklyData.map((d) => d.pomodoros));
+  const currentStats: StatCard[] = analytics ? [
+    { label: "Total Pomodoros", value: String(analytics.total_pomodoros), unit: "sessions" },
+    { label: "Focus Time", value: String(analytics.focus_time_hours), unit: "hours" },
+    { label: "Tasks Completed", value: String(analytics.tasks_completed), unit: "tasks" },
+    { label: "Current Streak", value: String(analytics.current_streak), unit: "days", change: "🔥" },
+  ] : [];
 
   return (
     <div style={{ padding: "2rem", backgroundColor: "var(--color-bg)", minHeight: "100vh", fontFamily: "var(--font-main)" }}>
@@ -86,7 +85,7 @@ function Analytics() {
           border: "1px solid var(--color-border)",
         }}
       >
-        {(["Week", "Month", "All Time"] as const).map((period) => (
+        {(["week", "month", "all_time"] as const).map((period) => (
           <button
             key={period}
             onClick={() => setTimePeriod(period)}
@@ -101,73 +100,90 @@ function Analytics() {
               transition: "all 0.3s",
             }}
           >
-            {period}
+            {period === "all_time" ? "All Time" : period.charAt(0).toUpperCase() + period.slice(1)}
           </button>
         ))}
       </div>
 
-      {/* Stats Grid */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-          gap: "1.5rem",
-          marginBottom: "2rem",
-        }}
-      >
-        {currentStats.map((stat, index) => {
-          const accentColors = [
-            "var(--color-primary-light)",
-            "var(--color-success-light)",
-            "var(--color-warning-light)",
-            "var(--color-danger-light)",
-          ];
-          const accentColor = accentColors[index % accentColors.length];
-          const textColors = [
-            "var(--color-primary)",
-            "var(--color-success)",
-            "var(--color-warning)",
-            "var(--color-danger)",
-          ];
-          const textColor = textColors[index % textColors.length];
+      {/* Loading and Error States */}
+      {loading && (
+        <div style={{ textAlign: "center", padding: "2rem" }}>
+          <p style={{ color: "var(--color-text-muted)" }}>Loading analytics...</p>
+        </div>
+      )}
 
-          return (
-            <div
-              key={index}
-              style={{
-                backgroundColor: "var(--color-surface)",
-                padding: "1.5rem",
-                borderRadius: "1rem",
-                boxShadow: "var(--shadow-lg)",
-                border: "1px solid var(--color-border)",
-              }}
-            >
-              <p style={{ fontSize: "0.875rem", color: "var(--color-text-muted)", margin: "0 0 0.5rem 0" }}>
-                {stat.label}
-              </p>
-              <div style={{ display: "flex", alignItems: "baseline", gap: "0.5rem" }}>
-              <h3 style={{ fontSize: "2rem", fontWeight: "var(--weight-extrabold)", color: textColor, margin: 0 }}>
-                {stat.value}
-              </h3>
-              {stat.unit && (
-                <span style={{ fontSize: "0.875rem", color: "var(--color-text-light)" }}>{stat.unit}</span>
-              )}
-            </div>
-            {stat.change && (
-              <p
-                style={{
-                  fontSize: "0.875rem",
-                  color: stat.change.includes("+") ? "var(--color-success)" : "var(--color-text-muted)",
-                  margin: "0.5rem 0 0 0",
-                }}
-              >
-                {stat.change}
-              </p>
-            )}
+      {error && (
+        <div
+          style={{
+            backgroundColor: "var(--color-danger-light)",
+            color: "var(--color-danger)",
+            padding: "1rem",
+            borderRadius: "0.75rem",
+            marginBottom: "2rem",
+            border: "1px solid var(--color-danger)",
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {!loading && analytics && (
+        <div>
+          {/* Stats Grid */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+              gap: "1.5rem",
+              marginBottom: "2rem",
+            }}
+          >
+            {currentStats.map((stat, index) => {
+              const textColors = [
+                "var(--color-primary)",
+                "var(--color-success)",
+                "var(--color-warning)",
+                "var(--color-danger)",
+              ];
+              const textColor = textColors[index % textColors.length];
+
+              return (
+                <div
+                  key={index}
+                  style={{
+                    backgroundColor: "var(--color-surface)",
+                    padding: "1.5rem",
+                    borderRadius: "1rem",
+                    boxShadow: "var(--shadow-lg)",
+                    border: "1px solid var(--color-border)",
+                  }}
+                >
+                  <p style={{ fontSize: "0.875rem", color: "var(--color-text-muted)", margin: "0 0 0.5rem 0" }}>
+                    {stat.label}
+                  </p>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: "0.5rem" }}>
+                    <h3 style={{ fontSize: "2rem", fontWeight: "var(--weight-extrabold)", color: textColor, margin: 0 }}>
+                      {stat.value}
+                    </h3>
+                    {stat.unit && (
+                      <span style={{ fontSize: "0.875rem", color: "var(--color-text-light)" }}>{stat.unit}</span>
+                    )}
+                  </div>
+                  {stat.change && (
+                    <p
+                      style={{
+                        fontSize: "0.875rem",
+                        color: stat.change.includes("+") ? "var(--color-success)" : "var(--color-text-muted)",
+                        margin: "0.5rem 0 0 0",
+                      }}
+                    >
+                      {stat.change}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
           </div>
-        );
-        })}
-      </div>
 
       {/* Weekly Breakdown */}
       <div
@@ -190,64 +206,71 @@ function Analytics() {
             gap: "1rem",
           }}
         >
-          {weeklyData.map((day, index) => {
-          const barColors = [
-            "var(--color-primary-light)",
-            "var(--color-success-light)",
-            "var(--color-warning-light)",
-            "var(--color-info-light)",
-            "var(--color-secondary-light)",
-            "var(--color-danger-light)",
-            "var(--color-primary-light)",
-          ];
-          const barColor = barColors[index % barColors.length];
-          const darkBarColors = [
-            "var(--color-primary)",
-            "var(--color-success)",
-            "var(--color-warning)",
-            "var(--color-info)",
-            "var(--color-secondary)",
-            "var(--color-danger)",
-            "var(--color-primary)",
-          ];
-          const darkBarColor = darkBarColors[index % darkBarColors.length];
+          {weeklyData.length > 0 ? (
+            weeklyData.map((day, index) => {
+              const maxPom = Math.max(...weeklyData.map((d) => d.pomodoros), 1);
+              const barColors = [
+                "var(--color-primary-light)",
+                "var(--color-success-light)",
+                "var(--color-warning-light)",
+                "var(--color-info-light)",
+                "var(--color-secondary-light)",
+                "var(--color-danger-light)",
+                "var(--color-primary-light)",
+              ];
+              const barColor = barColors[index % barColors.length];
+              const darkBarColors = [
+                "var(--color-primary)",
+                "var(--color-success)",
+                "var(--color-warning)",
+                "var(--color-info)",
+                "var(--color-secondary)",
+                "var(--color-danger)",
+                "var(--color-primary)",
+              ];
+              const darkBarColor = darkBarColors[index % darkBarColors.length];
 
-          return (
-            <div
-              key={index}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: "0.5rem",
-              }}
-            >
-              <div
-                style={{
-                  width: "100%",
-                  height: `${(day.pomodoros / maxPomodoros) * 150}px`,
-                  backgroundColor: barColor,
-                  borderRadius: "0.5rem",
-                  transition: "background-color 0.3s",
-                  cursor: "pointer",
-                  minHeight: "20px",
-                }}
-                onMouseEnter={(e) =>
-                  ((e.currentTarget as HTMLElement).style.backgroundColor = darkBarColor)
-                }
-                onMouseLeave={(e) =>
-                  ((e.currentTarget as HTMLElement).style.backgroundColor = barColor)
-                }
-              />
-              <p style={{ fontSize: "0.875rem", fontWeight: "var(--weight-bold)", color: "var(--color-text)", margin: 0 }}>
-                {day.day}
-              </p>
-              <p style={{ fontSize: "0.75rem", color: "var(--color-text-light)", margin: 0 }}>
-                {day.pomodoros}
-              </p>
+              return (
+                <div
+                  key={index}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "100%",
+                      height: `${(day.pomodoros / maxPom) * 150}px`,
+                      backgroundColor: barColor,
+                      borderRadius: "0.5rem",
+                      transition: "background-color 0.3s",
+                      cursor: "pointer",
+                      minHeight: "20px",
+                    }}
+                    onMouseEnter={(e) =>
+                      ((e.currentTarget as HTMLElement).style.backgroundColor = darkBarColor)
+                    }
+                    onMouseLeave={(e) =>
+                      ((e.currentTarget as HTMLElement).style.backgroundColor = barColor)
+                    }
+                  />
+                  <p style={{ fontSize: "0.875rem", fontWeight: "var(--weight-bold)", color: "var(--color-text)", margin: 0 }}>
+                    {day.day}
+                  </p>
+                  <p style={{ fontSize: "0.75rem", color: "var(--color-text-light)", margin: 0 }}>
+                    {day.pomodoros}
+                  </p>
+                </div>
+              );
+            })
+          ) : (
+            <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "2rem" }}>
+              <p style={{ color: "var(--color-text-muted)" }}>No data available</p>
             </div>
-          );
-        })}
+          )}
         </div>
       </div>
 
@@ -378,6 +401,8 @@ function Analytics() {
           </div>
         </div>
       </div>
+        </div>
+      )}
     </div>
   );
 }
