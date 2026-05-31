@@ -341,21 +341,21 @@ function Timer() {
     oscillator.stop(audioContext.currentTime + 0.5);
   };
 
-  const selectedTask = tasks.find((task) => task.id === selectedTaskId);
-
   return (
     <div className="timer-page">
       <main className="timer-content">
         <header className="timer-header">
           <h1>Focus Timer</h1>
-          <p>Stay focused, complete your tasks, and save your Pomodoro sessions.</p>
+          <p>Stay focused, complete your tasks, and achieve your goals.</p>
         </header>
 
         {error && <p className="timer-error">{error}</p>}
 
         <section className="timer-grid">
+          {/* ── Left column ── */}
           <div className="timer-left">
             <section className="timer-card">
+              {/* Session tabs */}
               <div className="session-tabs">
                 {(Object.keys(sessionDurations) as SessionType[]).map((type) => (
                   <button
@@ -369,6 +369,7 @@ function Timer() {
                 ))}
               </div>
 
+              {/* Task selector */}
               <div className="task-select-group">
                 <label>Task</label>
                 <select
@@ -389,21 +390,23 @@ function Timer() {
                 </select>
               </div>
 
+              {/* Timer ring */}
               <div className="timer-circle-wrapper">
                 <div
                   className="timer-ring"
                   style={{
-                    background: `conic-gradient(var(--color-primary) ${progress}%, #d9d9d9 ${progress}%)`,
+                    background: `conic-gradient(#0d2b4e ${progress}%, #e5e7eb ${progress}%)`,
                   }}
                 >
                   <div className="timer-inner">
                     <span>{sessionType}</span>
                     <h2>{formatTime(timeLeft)}</h2>
-                    <p>{activePomodoroId ? "session active" : "ready"}</p>
+                    <p>{activePomodoroId ? "session active" : "time left"}</p>
                   </div>
                 </div>
               </div>
 
+              {/* Controls — matches Figma: Reset | Start | Complete */}
               <div className="timer-controls">
                 <button
                   type="button"
@@ -434,12 +437,12 @@ function Timer() {
               </div>
             </section>
 
+            {/* Session Notes — shown below timer card when enabled */}
             {sessionNotesEnabled && (
               <section className="notes-card">
                 <h2>Session Notes</h2>
-
                 <textarea
-                  placeholder="Write notes for this Pomodoro session..."
+                  placeholder="Write notes after this session..."
                   value={sessionNotes}
                   onChange={(event) => setSessionNotes(event.target.value)}
                 />
@@ -447,15 +450,16 @@ function Timer() {
             )}
           </div>
 
+          {/* ── Right column ── */}
           <aside className="timer-right">
+            {/* Today's Progress */}
             <section className="progress-card">
-              <h2>Today’s Progress</h2>
+              <h2>Today's Progress</h2>
 
               <div className="progress-item">
                 <div className="progress-icon green">⏱</div>
-
                 <div className="progress-info">
-                  <h3>Current Focus Time</h3>
+                  <h3>Today's Focus Time</h3>
                   <strong>{todayFocusLabel}</strong>
                   <span>/ current session</span>
                   <div className="progress-bar">
@@ -466,11 +470,10 @@ function Timer() {
 
               <div className="progress-item">
                 <div className="progress-icon yellow">✓</div>
-
                 <div className="progress-info">
                   <h3>Completed Sessions</h3>
                   <strong>{completedSessions}</strong>
-                  <span>/ this page session</span>
+                  <span>/ 12 sessions</span>
                   <div className="progress-bar">
                     <div
                       style={{
@@ -482,6 +485,7 @@ function Timer() {
               </div>
             </section>
 
+            {/* Upcoming Tasks */}
             <section className="tasks-card">
               <h2>Upcoming Tasks</h2>
 
@@ -501,7 +505,7 @@ function Timer() {
                       onClick={() => setSelectedTaskId(task.id)}
                       disabled={isRunning}
                     >
-                      <span className="task-circle"></span>
+                      <span className="task-circle" />
                       <p>{task.title}</p>
                       <small>{task.due}</small>
                     </button>
@@ -510,13 +514,9 @@ function Timer() {
               )}
             </section>
 
+            {/* Session Settings — 3 toggles only (matches Figma) */}
             <section className="settings-card">
               <h2>Session Settings</h2>
-
-              <div className="settings-row">
-                <span>Selected Task</span>
-                <strong>{selectedTask ? selectedTask.title : "None"}</strong>
-              </div>
 
               <div className="settings-row">
                 <span>Auto-start Breaks</span>
@@ -526,7 +526,7 @@ function Timer() {
                     checked={autoStartBreak}
                     onChange={() => setAutoStartBreak((prev) => !prev)}
                   />
-                  <b></b>
+                  <b />
                 </label>
               </div>
 
@@ -538,7 +538,7 @@ function Timer() {
                     checked={soundEnabled}
                     onChange={() => setSoundEnabled((prev) => !prev)}
                   />
-                  <b></b>
+                  <b />
                 </label>
               </div>
 
@@ -550,7 +550,7 @@ function Timer() {
                     checked={sessionNotesEnabled}
                     onChange={() => setSessionNotesEnabled((prev) => !prev)}
                   />
-                  <b></b>
+                  <b />
                 </label>
               </div>
             </section>

@@ -96,18 +96,9 @@ function Tasks() {
   const [error, setError] = useState("");
 
   const totalTasks = tasks.length;
-
-  const completedTasks = tasks.filter(
-    (task) => task.status === "Completed"
-  ).length;
-
-  const inProgressTasks = tasks.filter(
-    (task) => task.status === "In Progress"
-  ).length;
-
-  const pendingTasks = tasks.filter(
-    (task) => task.status === "Pending"
-  ).length;
+  const completedTasks = tasks.filter((t) => t.status === "Completed").length;
+  const inProgressTasks = tasks.filter((t) => t.status === "In Progress").length;
+  const pendingTasks = tasks.filter((t) => t.status === "Pending").length;
 
   useEffect(() => {
     loadTasks();
@@ -117,11 +108,8 @@ function Tasks() {
     try {
       setIsLoading(true);
       setError("");
-
       const backendTasks = await getTasks();
-      const mappedTasks = backendTasks.map(mapTaskFromBackend);
-
-      setTasks(mappedTasks);
+      setTasks(backendTasks.map(mapTaskFromBackend));
     } catch (err) {
       console.error(err);
       setError("Unable to load tasks. Please make sure you are logged in.");
@@ -143,32 +131,15 @@ function Tasks() {
 
     if (sortBy === "Most Recent") {
       result.sort((a, b) => b.id - a.id);
-    }
-
-    if (sortBy === "Deadline") {
+    } else if (sortBy === "Deadline") {
       result.sort((a, b) => {
-        const firstDate = a.deadline
-          ? new Date(a.deadline).getTime()
-          : Number.MAX_SAFE_INTEGER;
-
-        const secondDate = b.deadline
-          ? new Date(b.deadline).getTime()
-          : Number.MAX_SAFE_INTEGER;
-
-        return firstDate - secondDate;
+        const fa = a.deadline ? new Date(a.deadline).getTime() : Number.MAX_SAFE_INTEGER;
+        const fb = b.deadline ? new Date(b.deadline).getTime() : Number.MAX_SAFE_INTEGER;
+        return fa - fb;
       });
-    }
-
-    if (sortBy === "Priority") {
-      const priorityOrder: Record<Priority, number> = {
-        High: 1,
-        Medium: 2,
-        Low: 3,
-      };
-
-      result.sort(
-        (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]
-      );
+    } else if (sortBy === "Priority") {
+      const order: Record<Priority, number> = { High: 1, Medium: 2, Low: 3 };
+      result.sort((a, b) => order[a.priority] - order[b.priority]);
     }
 
     return result;
@@ -186,7 +157,6 @@ function Tasks() {
 
   const handleOpenEditModal = (task: Task) => {
     setSelectedTask(task);
-
     setEditTask({
       title: task.title,
       description: task.description ?? "",
@@ -195,7 +165,6 @@ function Tasks() {
       pomodoros: String(task.pomodoros),
       deadline: task.deadline,
     });
-
     setIsEditModalOpen(true);
   };
 
@@ -216,35 +185,28 @@ function Tasks() {
       alert("Please complete all required fields.");
       return false;
     }
-
     return true;
   };
 
   const handleCreateTask = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
     if (!validateTaskForm(newTask)) return;
 
     try {
       setIsCreating(true);
-
-      const createdBackendTask = await createTask({
+      const created = await createTask({
         title: newTask.title.trim(),
         description: newTask.description.trim() || null,
-        priority: priorityToBackend(newTask.priority),
-        status: statusToBackend(newTask.status),
+        priority: priorityToBackend(newTask.priority as Priority),
+        status: statusToBackend(newTask.status as TaskStatus),
         estimated_duration: Number(newTask.pomodoros),
         deadline: newTask.deadline,
       });
-
-      const mappedTask = mapTaskFromBackend(createdBackendTask);
-
-      const taskWithDeadline: Task = {
-        ...mappedTask,
-        deadline: createdBackendTask.deadline ?? newTask.deadline,
+      const mapped: Task = {
+        ...mapTaskFromBackend(created),
+        deadline: created.deadline ?? newTask.deadline,
       };
-
-      setTasks((prev) => [taskWithDeadline, ...prev]);
+      setTasks((prev) => [mapped, ...prev]);
       handleCloseAddModal();
     } catch (err) {
       console.error(err);
@@ -256,35 +218,23 @@ function Tasks() {
 
   const handleUpdateTask = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
-    if (!selectedTask) return;
-    if (!validateTaskForm(editTask)) return;
+    if (!selectedTask || !validateTaskForm(editTask)) return;
 
     try {
       setIsUpdating(true);
-
-      const updatedBackendTask = await updateTask(selectedTask.id, {
+      const updated = await updateTask(selectedTask.id, {
         title: editTask.title.trim(),
         description: editTask.description.trim() || null,
-        priority: priorityToBackend(editTask.priority),
-        status: statusToBackend(editTask.status),
+        priority: priorityToBackend(editTask.priority as Priority),
+        status: statusToBackend(editTask.status as TaskStatus),
         estimated_duration: Number(editTask.pomodoros),
         deadline: editTask.deadline,
       });
-
-      const mappedUpdatedTask = mapTaskFromBackend(updatedBackendTask);
-
-      const updatedTaskWithDeadline: Task = {
-        ...mappedUpdatedTask,
-        deadline: updatedBackendTask.deadline ?? editTask.deadline,
+      const mapped: Task = {
+        ...mapTaskFromBackend(updated),
+        deadline: updated.deadline ?? editTask.deadline,
       };
-
-      setTasks((prev) =>
-        prev.map((task) =>
-          task.id === selectedTask.id ? updatedTaskWithDeadline : task
-        )
-      );
-
+      setTasks((prev) => prev.map((t) => (t.id === selectedTask.id ? mapped : t)));
       handleCloseEditModal();
     } catch (err) {
       console.error(err);
@@ -296,20 +246,11 @@ function Tasks() {
 
   const handleStartTimer = async (id: number) => {
     try {
-      const updatedBackendTask = await updateTask(id, {
-        status: "in_progress",
-      });
-
-      const updatedTask = mapTaskFromBackend(updatedBackendTask);
-
+      const updated = await updateTask(id, { status: "in_progress" });
+      const mapped = mapTaskFromBackend(updated);
       setTasks((prev) =>
-        prev.map((task) =>
-          task.id === id
-            ? {
-                ...updatedTask,
-                deadline: updatedTask.deadline || task.deadline,
-              }
-            : task
+        prev.map((t) =>
+          t.id === id ? { ...mapped, deadline: mapped.deadline || t.deadline } : t
         )
       );
     } catch (err) {
@@ -321,8 +262,7 @@ function Tasks() {
   const handleDelete = async (id: number) => {
     try {
       await deleteTask(id);
-
-      setTasks((prev) => prev.filter((task) => task.id !== id));
+      setTasks((prev) => prev.filter((t) => t.id !== id));
     } catch (err) {
       console.error(err);
       alert("Failed to delete task.");
@@ -331,15 +271,23 @@ function Tasks() {
 
   return (
     <main className="tasks-page">
+      {/* Header — stacked left-aligned like Figma */}
       <section className="tasks-header">
         <h1>Tasks</h1>
         <p>Organize your tasks and connect them with your Pomodoro sessions.</p>
       </section>
 
+      {/* Stats */}
       <section className="tasks-stats-grid">
         <div className="task-stat-card">
-          <div className="task-stat-icon total">▣</div>
-
+          <div className="task-stat-icon total">
+            {/* Clipboard icon */}
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="9" y="2" width="6" height="4" rx="1" />
+              <path d="M9 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-3" />
+              <path d="M12 11h4M12 15h4M8 11h.01M8 15h.01" />
+            </svg>
+          </div>
           <div>
             <p>Total Tasks</p>
             <h2>{totalTasks}</h2>
@@ -347,8 +295,13 @@ function Tasks() {
         </div>
 
         <div className="task-stat-card">
-          <div className="task-stat-icon completed">✓</div>
-
+          <div className="task-stat-icon completed">
+            {/* Check circle icon */}
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+          </div>
           <div>
             <p>Completed</p>
             <h2>{completedTasks}</h2>
@@ -356,8 +309,13 @@ function Tasks() {
         </div>
 
         <div className="task-stat-card">
-          <div className="task-stat-icon progress">◌</div>
-
+          <div className="task-stat-icon progress">
+            {/* Clock / spinner icon */}
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </div>
           <div>
             <p>In Progress</p>
             <h2>{inProgressTasks}</h2>
@@ -365,8 +323,14 @@ function Tasks() {
         </div>
 
         <div className="task-stat-card">
-          <div className="task-stat-icon pending">!</div>
-
+          <div className="task-stat-icon pending">
+            {/* Alert icon */}
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </div>
           <div>
             <p>Pending</p>
             <h2>{pendingTasks}</h2>
@@ -374,6 +338,7 @@ function Tasks() {
         </div>
       </section>
 
+      {/* Filter bar */}
       <TaskFilterBar
         priorityFilter={priorityFilter}
         statusFilter={statusFilter}
@@ -384,14 +349,14 @@ function Tasks() {
         onAddTask={handleOpenAddModal}
       />
 
+      {/* Messages */}
       {isLoading && <p className="tasks-message">Loading tasks...</p>}
-
       {error && <p className="tasks-message error">{error}</p>}
-
       {!isLoading && !error && filteredTasks.length === 0 && (
         <p className="tasks-message">No tasks found.</p>
       )}
 
+      {/* Task cards */}
       <section className="tasks-grid">
         {!isLoading &&
           !error &&
@@ -406,6 +371,7 @@ function Tasks() {
           ))}
       </section>
 
+      {/* Modals */}
       {isAddModalOpen && (
         <TaskModal
           mode="create"

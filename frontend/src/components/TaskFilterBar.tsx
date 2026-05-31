@@ -1,14 +1,14 @@
 import type { FilterStatus, Priority, SortOption } from "../types/taskTypes";
 
-type TaskFilterBarProps = {
+interface TaskFilterBarProps {
   priorityFilter: "All" | Priority;
   statusFilter: FilterStatus;
   sortBy: SortOption;
-  onPriorityChange: (priority: "All" | Priority) => void;
-  onStatusChange: (status: FilterStatus) => void;
-  onSortChange: (sort: SortOption) => void;
+  onPriorityChange: (value: "All" | Priority) => void;
+  onStatusChange: (value: FilterStatus) => void;
+  onSortChange: (value: SortOption) => void;
   onAddTask: () => void;
-};
+}
 
 function TaskFilterBar({
   priorityFilter,
@@ -20,14 +20,13 @@ function TaskFilterBar({
   onAddTask,
 }: TaskFilterBarProps) {
   return (
-    <section className="tasks-filter-card">
+    <div className="tasks-filter-card">
       <div className="filter-group">
-        <label>Priority</label>
+        <label htmlFor="priority-filter">Priority</label>
         <select
+          id="priority-filter"
           value={priorityFilter}
-          onChange={(event) =>
-            onPriorityChange(event.target.value as "All" | Priority)
-          }
+          onChange={(e) => onPriorityChange(e.target.value as "All" | Priority)}
         >
           <option value="All">All Priorities</option>
           <option value="High">High</option>
@@ -37,12 +36,11 @@ function TaskFilterBar({
       </div>
 
       <div className="filter-group">
-        <label>Status</label>
+        <label htmlFor="status-filter">Status</label>
         <select
+          id="status-filter"
           value={statusFilter}
-          onChange={(event) =>
-            onStatusChange(event.target.value as FilterStatus)
-          }
+          onChange={(e) => onStatusChange(e.target.value as FilterStatus)}
         >
           <option value="All">All Status</option>
           <option value="Pending">Pending</option>
@@ -53,10 +51,11 @@ function TaskFilterBar({
       </div>
 
       <div className="filter-group">
-        <label>Sort By</label>
+        <label htmlFor="sort-filter">Sort By</label>
         <select
+          id="sort-filter"
           value={sortBy}
-          onChange={(event) => onSortChange(event.target.value as SortOption)}
+          onChange={(e) => onSortChange(e.target.value as SortOption)}
         >
           <option value="Most Recent">Most Recent</option>
           <option value="Deadline">Deadline</option>
@@ -64,10 +63,10 @@ function TaskFilterBar({
         </select>
       </div>
 
-      <button className="add-task-btn" onClick={onAddTask}>
+      <button type="button" className="add-task-btn" onClick={onAddTask}>
         Add New Task
       </button>
-    </section>
+    </div>
   );
 }
 
