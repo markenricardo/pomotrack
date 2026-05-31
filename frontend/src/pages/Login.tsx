@@ -396,6 +396,10 @@ function Login() {
           >
             <button
               type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                document.querySelector('form')?.dispatchEvent(new Event('submit', { bubbles: true }));
+              }}
               style={{
                 padding: '0.75rem',
                 borderRadius: '0.75rem',
@@ -426,6 +430,7 @@ function Login() {
             </button>
             <button
               type="button"
+              onClick={() => console.log('Google login clicked')}
               style={{
                 padding: '0.75rem',
                 borderRadius: '0.75rem',
@@ -451,11 +456,12 @@ function Login() {
                 e.currentTarget.style.borderColor = '#e5e7eb';
               }}
             >
-              <Globe size={18} />
+              <img src="/google.svg" alt="Google" style={{ width: '18px', height: '18px' }} />
               Google
             </button>
             <button
               type="button"
+              onClick={() => console.log('Facebook login clicked')}
               style={{
                 padding: '0.75rem',
                 borderRadius: '0.75rem',
@@ -481,7 +487,7 @@ function Login() {
                 e.currentTarget.style.borderColor = '#e5e7eb';
               }}
             >
-              <MessageCircle size={18} />
+              <img src="/facebook.svg" alt="Facebook" style={{ width: '18px', height: '18px' }} />
               Facebook
             </button>
           </div>
