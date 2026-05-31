@@ -1,197 +1,329 @@
+/* ============================================================
+   SIDEBAR — matches Figma design, properly sized & responsive
+   ============================================================ */
+
 .sidebar {
-  width: 260px;
+  width: 200px;
+  min-width: 200px;
   height: 100vh;
-  background: #003366;
+  background: #0d2b4e;
   position: fixed;
   left: 0;
   top: 0;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding-bottom: 20px;
+  padding-bottom: 16px;
   z-index: 100;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
+/* ── Header ─────────────────────────────────────────────── */
 .sidebar-header {
   display: flex;
-  justify-content: center; 
-  margin-top: 48px;
-  padding: 0 20px;
+  justify-content: center;
+  margin-top: 28px;
+  padding: 0 16px;
 }
 
 .title-group.centered {
   text-align: center;
-  width: auto; 
 }
 
 .brand-name {
   font-family: 'Inter', sans-serif;
   font-weight: 700;
-  font-size: 2rem; 
-  color: #FFFFFF;
+  font-size: 1.25rem;
+  color: #ffffff;
   margin: 0;
+  letter-spacing: -0.3px;
 }
 
 .slogan {
   font-family: 'Inter', sans-serif;
-  font-weight: 600;
-  font-size: 18px;
+  font-weight: 500;
+  font-size: 11px;
   color: #708090;
-  margin: 0;
-  white-space: nowrap; 
+  margin: 2px 0 0;
+  white-space: nowrap;
 }
 
-.sidebar-main-nav { margin-top: 50px; padding: 0 20px; }
-.sidebar-productivity-nav { margin-top: 49px; padding: 0 20px; }
+/* ── Top wrapper scrolls, bottom (profile) stays fixed ── */
+.sidebar-top-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ── Nav sections ──────────────────────────────────────── */
+.sidebar-main-nav {
+  margin-top: 28px;
+  padding: 0 12px;
+}
+
+.sidebar-productivity-nav {
+  margin-top: 24px;
+  padding: 0 12px;
+}
 
 .section-label {
   font-family: 'Inter', sans-serif;
   font-weight: 600;
-  font-size: 18px;
+  font-size: 10px;
+  letter-spacing: 0.8px;
   color: #708090;
-  margin-bottom: 12px;
-  padding-left: 14px;
+  margin: 0 0 8px;
+  padding-left: 10px;
 }
 
-.nav-group { display: flex; flex-direction: column; gap: 8px; }
+.nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  width: 220px;
-  height: 50px;
-  padding: 0 14px;
-  border-radius: 10px;
+  gap: 10px;
+  width: 100%;
+  height: 40px;
+  padding: 0 10px;
+  border-radius: 8px;
   text-decoration: none;
   font-family: 'Inter', sans-serif;
-  font-weight: 600;
-  font-size: 18px;
+  font-weight: 500;
+  font-size: 13.5px;
   color: #708090;
-  transition: 0.2s;
+  transition: background 0.15s, color 0.15s;
+  box-sizing: border-box;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #adbfd4;
 }
 
 .nav-item.active {
   background: #008080;
-  color: #FFFFFF;
+  color: #ffffff;
 }
 
+/* ── Weekly Streak ─────────────────────────────────────── */
 .sidebar-streak-display {
-  position: relative;
-  z-index: 1; 
-  margin-top: 230px;
-  padding: 0 20px;
+  margin-top: 32px;
+  padding: 0 12px;
 }
 
 .streak-title {
   font-family: 'Inter', sans-serif;
   font-weight: 600;
-  font-size: 18px;
+  font-size: 12px;
   color: #708090;
-  margin: 0 0 10px 0;
+  margin: 0 0 8px;
 }
 
 .streak-progress-container {
   position: relative;
-  width: 220px;
-  height: 30px; 
+  width: 100%;
+  height: 26px;
   display: flex;
   align-items: flex-end;
 }
 
 .streak-bar {
-  width: 220px;
-  height: 10px;
-  background: linear-gradient(90deg, #FFCC00 0%, #FF8D28 25%, #CB30E0 50%, #FF2D55 75%, #FF383C 100%);
+  width: calc(100% - 10px);
+  height: 8px;
+  background: linear-gradient(90deg, #ffcc00 0%, #ff8d28 25%, #cb30e0 50%, #ff2d55 75%, #ff383c 100%);
   border-radius: 10px;
   z-index: 1;
 }
 
 .streak-icon {
   position: absolute;
-  right: -2px; 
-  bottom: 0; 
+  right: -4px;
+  bottom: 0;
   z-index: 2;
 }
 
 .streak-subtitle {
   font-family: 'Inter', sans-serif;
   font-weight: 400;
-  font-size: 14px;
+  font-size: 11px;
   color: #708090;
-  margin-top: 8px;
+  margin: 6px 0 0;
   text-align: right;
-  width: 220px;
 }
 
+/* ── Profile section ───────────────────────────────────── */
 .profile-section-container {
-  margin-top: 16px;
-  padding: 0 10px;
+  padding: 0 8px;
   position: relative;
-  z-index: 1000; 
+  z-index: 1000;
+  flex-shrink: 0;
 }
 
 .profile-account-card {
-  width: 240px; 
-  height: 50px;
-  border-radius: 10px;
+  width: 100%;
+  height: 46px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
-  padding: 0 12px;
+  padding: 0 10px;
   cursor: pointer;
   box-sizing: border-box;
+  transition: background 0.15s;
 }
 
-.profile-account-card.default { background: #003366; color: #708090; }
-.profile-account-card.is-clicked { background: #008080; color: #FFFFFF; }
+.profile-account-card.default {
+  background: #0d2b4e;
+  color: #708090;
+}
+
+.profile-account-card.is-clicked {
+  background: #008080;
+  color: #ffffff;
+}
 
 .profile-avatar {
-  width: 30px;
-  height: 30px;
-  background: rgba(217, 217, 217, 0.5);
-  border-radius: 30px;
-  margin-right: 10px;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  background: rgba(217, 217, 217, 0.45);
+  border-radius: 50%;
+  margin-right: 8px;
 }
 
-.profile-info { display: flex; flex-direction: column; flex: 1; }
-.profile-name { font-weight: 700; font-size: 14px; }
-.profile-email { font-weight: 400; font-size: 14px; }
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-name {
+  font-weight: 600;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-email {
+  font-weight: 400;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #708090;
+}
+
+.profile-account-card.is-clicked .profile-email {
+  color: rgba(255, 255, 255, 0.75);
+}
 
 .profile-chevron {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.3s ease;
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
 }
 
 .profile-chevron.rotated {
   transform: rotate(180deg);
 }
 
+/* ── Profile Dropdown ──────────────────────────────────── */
 .profile-dropdown-menu {
   position: absolute;
-  bottom: 55px; 
-  left: 10px;  
-  width: 240px;
-  background: #D9D9D9;
-  border-radius: 10px;
+  bottom: 52px;
+  left: 8px;
+  width: calc(100% - 16px);
+  background: #d9d9d9;
+  border-radius: 8px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   z-index: 999;
-  box-shadow: 0px -4px 10px rgba(0, 0, 0, 0.2); 
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.25);
 }
 
 .profile-dropdown-option {
-  height: 29.5px;
+  height: 36px;
   display: flex;
   align-items: center;
-  padding: 0 15px;
+  padding: 0 14px;
   gap: 10px;
-  font-size: 14px;
+  font-size: 13px;
   color: #000000;
   cursor: pointer;
+  transition: background 0.12s;
 }
 
-.profile-dropdown-option:hover { background: #BBCFE3; }
+.profile-dropdown-option:hover {
+  background: #bbcfe3;
+}
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 56px;
+    min-width: 56px;
+  }
+
+  .brand-name,
+  .slogan,
+  .section-label,
+  .nav-item span,
+  .streak-title,
+  .streak-subtitle,
+  .streak-bar,
+  .profile-info,
+  .profile-chevron {
+    display: none;
+  }
+
+  .sidebar-header {
+    margin-top: 16px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .sidebar-main-nav,
+  .sidebar-productivity-nav {
+    padding: 0 6px;
+    margin-top: 16px;
+  }
+
+  .nav-item {
+    justify-content: center;
+    padding: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    margin: 0 auto;
+  }
+
+  .nav-item gap {
+    gap: 0;
+  }
+
+  .profile-section-container {
+    padding: 0 4px;
+  }
+
+  .profile-account-card {
+    justify-content: center;
+    padding: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    margin: 0 auto;
+  }
+
+  .sidebar-streak-display {
+    display: none;
+  }
+}
