@@ -1,47 +1,47 @@
-/* Achievements.css */
+/* ============================================================
+   ACHIEVEMENTS PAGE — Matches Figma / Tasks Page Design
+   ============================================================ */
 
 .achievements-page {
+  width: 100%;
   min-height: 100vh;
-  background-color: #F8FAFC;
-  padding: 2rem;
-  font-family: system-ui, -apple-system, sans-serif;
-  color: #1e293b;
+  box-sizing: border-box;
+}
+
+*, *::before, *::after {
   box-sizing: border-box;
 }
 
 .achievements-container {
-  max-width: 1100px;
+  max-width: 1280px; /* Matched to the Timer and Dashboard */
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 2.5rem;
+  gap: 20px;
 }
 
-/* --- Header --- */
-.page-header h1 {
-  font-size: 2.5rem;
-  font-weight: 800;
-  color: #0f172a;
-  margin: 0 0 0.5rem 0;
-  line-height: 1.2;
+/* ── Messages ────────────────────────────────────────────── */
+.achievements-message {
+  margin: 0 0 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
 }
 
-.page-header p {
-  color: #64748b;
-  margin: 0;
-  font-weight: 500;
+.achievements-message.error {
+  color: #dc2626;
 }
 
-/* --- Level & XP Banner --- */
+/* ── Level & XP Banner ───────────────────────────────────── */
 .level-banner {
   background-color: #ffffff;
-  border-radius: 24px;
-  padding: 2.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  border: 1px solid #f1f5f9;
+  border-radius: 14px; /* Updated to 14px */
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 16px;
 }
 
 .level-header {
@@ -51,35 +51,36 @@
 }
 
 .level-title-block p {
-  font-size: 0.875rem;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #8b5cf6;
-  margin: 0 0 0.25rem 0;
+  color: #008080; /* Teal theme */
+  margin: 0 0 4px 0;
 }
 
 .level-title-block h2 {
-  font-size: 2rem;
+  font-size: 22px; /* Matched to Stats */
   font-weight: 800;
-  color: #0f172a;
+  color: #1a1a2e;
   margin: 0;
 }
 
 .xp-text {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
 }
 
 .xp-text span {
-  color: #0f172a;
+  color: #1a1a2e;
+  font-size: 17px;
   font-weight: 800;
 }
 
 .xp-bar-container {
   width: 100%;
-  height: 16px;
+  height: 12px;
   background-color: #f1f5f9;
   border-radius: 999px;
   overflow: hidden;
@@ -87,85 +88,94 @@
 
 .xp-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #8b5cf6, #c084fc);
+  background: #008080; /* Swapped purple gradient for Teal */
   border-radius: 999px;
   transition: width 0.5s ease-out;
 }
 
-/* --- Quick Stats Grid --- */
-.stats-grid {
+/* ── Quick Stats Grid ────────────────────────────────────── */
+.achievements-stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(4, 1fr); /* 4 columns like Tasks page */
+  gap: 16px;
+  margin-bottom: 8px;
 }
 
-.stat-card {
-  background-color: #ffffff;
-  border-radius: 20px;
-  padding: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  border: 1px solid #f1f5f9;
-}
-
-.stat-icon {
-  width: 56px;
-  height: 56px;
+.achievement-stat-card {
+  min-height: 90px;
+  padding: 18px 20px;
   border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  gap: 16px;
+  transition: transform 0.15s, box-shadow 0.15s;
 }
 
-.stat-icon.orange { background-color: #fff7ed; color: #f97316; }
-.stat-icon.blue { background-color: #eff6ff; color: #2563eb; }
-.stat-icon.purple { background-color: #f3e8ff; color: #9333ea; }
-
-.stat-info p {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: #94a3b8;
-  margin: 0 0 0.25rem 0;
+.achievement-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
-.stat-info h3 {
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: #0f172a;
+.achievement-stat-icon {
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+}
+
+.achievement-stat-icon.yellow { background: #fef9c3; color: #ca8a04; }
+.achievement-stat-icon.blue { background: #dbeafe; color: #2563eb; }
+.achievement-stat-icon.green { background: #dcfce7; color: #16a34a; }
+
+.achievement-stat-info p {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.achievement-stat-info h2 {
   margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: #1a1a2e;
 }
 
-/* --- Badges & Achievements Grid --- */
+/* ── Badges & Achievements Grid ──────────────────────────── */
 .section-title {
-  font-size: 1.5rem;
+  font-size: 20px;
   font-weight: 800;
-  color: #0f172a;
-  margin: 1rem 0 0 0;
+  color: #1a1a2e;
+  margin: 10px 0 16px 0;
 }
 
 .badges-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
+  gap: 20px;
 }
 
 .badge-card {
   background-color: #ffffff;
-  border-radius: 20px;
-  padding: 1.5rem;
+  border-radius: 14px; /* Updated to 14px */
+  padding: 20px;
   display: flex;
   align-items: flex-start;
-  gap: 1.25rem;
-  border: 1px solid #f1f5f9;
-  transition: transform 0.2s, box-shadow 0.2s;
+  gap: 16px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.15s, box-shadow 0.15s;
 }
 
 .badge-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
 }
 
 .badge-card.locked {
@@ -179,9 +189,10 @@
 }
 
 .badge-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 16px;
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -190,32 +201,51 @@
 
 .badge-icon.yellow { background-color: #fefce8; color: #eab308; }
 .badge-icon.green { background-color: #f0fdf4; color: #16a34a; }
+.badge-icon.blue { background-color: #eff6ff; color: #3b82f6; }
 .badge-icon.red { background-color: #fef2f2; color: #ef4444; }
 
 .badge-details h4 {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: #0f172a;
-  margin: 0 0 0.35rem 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: #1a1a2e;
+  margin: 0 0 6px 0;
 }
 
 .badge-details p {
-  font-size: 0.875rem;
-  color: #64748b;
-  margin: 0 0 0.75rem 0;
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0 0 12px 0;
   line-height: 1.4;
 }
 
 .badge-status {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.75rem;
+  gap: 6px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  padding: 0.25rem 0.6rem;
-  border-radius: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
 }
 
-.status-unlocked { background-color: #f0fdf4; color: #16a34a; }
-.status-locked { background-color: #f1f5f9; color: #64748b; }
+/* Matches the Status Pills from Tasks Page */
+.status-unlocked { background-color: #dcfce7; color: #15803d; }
+.status-locked { background-color: #f3f4f6; color: #6b7280; }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 1200px) {
+  .achievements-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .achievements-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .badges-grid {
+    grid-template-columns: 1fr;
+  }
+}
