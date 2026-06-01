@@ -1,0 +1,20 @@
+.page-header {
+  margin-bottom: var(--space-xl); /* Uses your 32px spacing token */
+}
+
+.page-header_title {
+  margin: 0 0 var(--space-xs); /* Uses your 4px spacing token */
+  font-size: var(--text-3xl);  /* Uses your 32px font size token */
+  font-weight: var(--weight-bold); /* Uses your 700 weight token */
+  color: var(--color-text);    /* Uses your dark slate text color */
+  line-height: 1.2;
+  letter-spacing: -0.3px;
+}
+
+.page-header_subtitle {
+  margin: 0;
+  font-size: var(--text-lg);   /* Uses your 18px font size token */
+  font-weight: var(--weight-regular); /* Uses your 400 weight token */
+  color: var(--color-text-muted); /* Uses your muted slate text color */
+  line-height: 1.5;
+}

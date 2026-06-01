@@ -39,27 +39,27 @@ const ProfileDropdown = ({ onLogoutClick }: ProfileDropdownProps) => {
 
   return (
     <div className="profile-section-container" ref={dropdownRef}>
-      {/* Dropdown Menu */}
+      {/* Dropdown Menu — opens above the card */}
       {isOpen && (
         <div className="profile-dropdown-menu">
-          <div 
+          <div
             className="profile-dropdown-option"
             onClick={() => {
               setIsOpen(false);
               navigate("/settings");
             }}
           >
-            <Settings size={20} />
+            <Settings size={16} />
             <span>Settings</span>
           </div>
-          <div 
+          <div
             className="profile-dropdown-option"
             onClick={() => {
               setIsOpen(false);
               onLogoutClick();
             }}
           >
-            <LogOut size={20} />
+            <LogOut size={16} />
             <span>Logout</span>
           </div>
         </div>
@@ -70,13 +70,13 @@ const ProfileDropdown = ({ onLogoutClick }: ProfileDropdownProps) => {
         className={`profile-account-card ${isOpen ? "is-clicked" : "default"}`}
         onClick={() => setIsOpen(!isOpen)}
       >
-        <div className="profile-avatar"></div>
+        <div className="profile-avatar" />
         <div className="profile-info">
           <span className="profile-name">First Name Surname</span>
           <span className="profile-email">fnsn@gmail.com</span>
         </div>
         <div className={`profile-chevron ${isOpen ? "rotated" : ""}`}>
-          <ChevronDown size={20} strokeWidth={2.5} />
+          <ChevronDown size={16} strokeWidth={2.5} />
         </div>
       </div>
     </div>
@@ -102,21 +102,21 @@ function Sidebar() {
 
   const handleLogoutConfirm = () => {
     setShowLogoutModal(false);
-    navigate("/login"); 
+    navigate("/login");
   };
 
   return (
     <aside className="sidebar">
       <div className="sidebar-top-wrapper">
-        {/* Header Section */}
+        {/* Header */}
         <header className="sidebar-header">
           <div className="title-group centered">
             <h2 className="brand-name">PomoTrack</h2>
-            <p className="slogan">Focus. Track. Improve.</p> 
+            <p className="slogan">Focus. Track. Improve.</p>
           </div>
         </header>
 
-        {/* MAIN Group */}
+        {/* MAIN nav */}
         <div className="sidebar-main-nav">
           <p className="section-label">MAIN</p>
           <nav className="nav-group">
@@ -130,7 +130,7 @@ function Sidebar() {
                     isActive ? "nav-item active" : "nav-item"
                   }
                 >
-                  <Icon size={20} />
+                  <Icon size={18} />
                   <span>{item.name}</span>
                 </NavLink>
               );
@@ -138,7 +138,7 @@ function Sidebar() {
           </nav>
         </div>
 
-        {/* PRODUCTIVITY Group */}
+        {/* PRODUCTIVITY nav */}
         <div className="sidebar-productivity-nav">
           <p className="section-label">PRODUCTIVITY</p>
           <nav className="nav-group">
@@ -152,7 +152,7 @@ function Sidebar() {
                     isActive ? "nav-item active" : "nav-item"
                   }
                 >
-                  <Icon size={20} />
+                  <Icon size={18} />
                   <span>{item.name}</span>
                 </NavLink>
               );
@@ -160,28 +160,36 @@ function Sidebar() {
           </nav>
         </div>
 
-        {/* Weekly Streak Display */}
+        {/* Weekly Streak */}
         <div className="sidebar-streak-display">
           <p className="streak-title">Weekly Streak</p>
           <div className="streak-progress-container">
+            <div className="streak-bar" />
             <div className="streak-icon">
-              <svg width="25" height="30" viewBox="0 0 25 35" fill="none">
-                <path d="M12.5 0C12.5 0 25 10 25 20C25 28.2843 19.4036 35 12.5 35C5.59644 35 0 28.2843 0 20C0 10 12.5 0 12.5 0Z" fill="#FF383C"/>
-                <path d="M12.5 7C12.5 7 18 15 18 22C18 25 15.5 28 12.5 28C9.5 28 7 25 7 22C7 15 12.5 7 12.5 7Z" fill="#FF8D28" opacity="0.8"/>
+              <svg width="20" height="26" viewBox="0 0 25 35" fill="none">
+                <path
+                  d="M12.5 0C12.5 0 25 10 25 20C25 28.2843 19.4036 35 12.5 35C5.59644 35 0 28.2843 0 20C0 10 12.5 0 12.5 0Z"
+                  fill="#FF383C"
+                />
+                <path
+                  d="M12.5 7C12.5 7 18 15 18 22C18 25 15.5 28 12.5 28C9.5 28 7 25 7 22C7 15 12.5 7 12.5 7Z"
+                  fill="#FF8D28"
+                  opacity="0.8"
+                />
               </svg>
             </div>
-            <div className="streak-bar"></div>
           </div>
           <p className="streak-subtitle">5/5 days completed</p>
         </div>
       </div>
-      
+
+      {/* Profile — pinned at bottom */}
       <ProfileDropdown onLogoutClick={() => setShowLogoutModal(true)} />
 
       {showLogoutModal && (
-        <LogoutModal 
-          onClose={() => setShowLogoutModal(false)} 
-          onConfirm={handleLogoutConfirm} 
+        <LogoutModal
+          onClose={() => setShowLogoutModal(false)}
+          onConfirm={handleLogoutConfirm}
         />
       )}
     </aside>
