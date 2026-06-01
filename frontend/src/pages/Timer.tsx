@@ -12,17 +12,12 @@ import {
   resumePomodoro,
 } from "../api/pomodorosApi";
 
+import { getSettings } from "../api/settingsApi"; // Imported to fetch configuration updates
 import type { BackendSessionType } from "../api/pomodorosApi";
 import { getTasks, updateTask as updateTaskApi } from "../api/tasksApi";
 import type { BackendTask } from "../api/tasksApi";
 import { useAppContext } from "../context/AppContext";
 import type { SessionType, TimerTask } from "../types/timerTypes";
-
-const sessionDurations: Record<SessionType, number> = {
-  Focus: 25 * 60,
-  "Short Break": 5 * 60,
-  "Long Break": 15 * 60,
-};
 
 const sessionTypeToBackend = (sessionType: SessionType): BackendSessionType => {
   if (sessionType === "Short Break") return "short_break";
@@ -63,8 +58,15 @@ function Timer() {
     statsLoaded,
   } = useAppContext();
 
+  // Dynamic state container holding session durations in seconds
+  const [dynamicDurations, setDynamicDurations] = useState<Record<SessionType, number>>({
+    Focus: 25 * 60,
+    "Short Break": 5 * 60,
+    "Long Break": 15 * 60,
+  });
+
   const [sessionType, setSessionType] = useState<SessionType>("Focus");
-  const [timeLeft, setTimeLeft] = useState<number>(sessionDurations.Focus);
+  const [timeLeft, setTimeLeft] = useState<number>(25 * 60);
   const [isRunning, setIsRunning] = useState<boolean>(false);
 
   const [activePomodoroId, setActivePomodoroId] = useState<number | null>(null);
@@ -85,7 +87,7 @@ function Timer() {
   const [completionToast, setCompletionToast] = useState<CompletionToast | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const totalDuration = sessionDurations[sessionType];
+  const totalDuration = dynamicDurations[sessionType];
   const elapsedSeconds = totalDuration - timeLeft;
 
   const didApplyPending = useRef(false);
@@ -100,6 +102,47 @@ function Timer() {
   }, [pendingTaskId, pendingTaskTitle, clearPendingTask]);
 
   useEffect(() => { loadTasks(); }, []);
+
+  // Sync saved configurations from backend database and install real-time event updates runtime context
+  useEffect(() => {
+    const initializeTimerSettings = async () => {
+      try {
+        const settings = await getSettings();
+        const freshDurations = {
+          Focus: settings.focusDuration * 60,
+          "Short Break": settings.shortBreakDuration * 60,
+          "Long Break": settings.longBreakDuration * 60,
+        };
+        setDynamicDurations(freshDurations);
+        setTimeLeft(freshDurations[sessionType]);
+      } catch (err) {
+        console.error("Failed loading preferences from backend database:", err);
+      }
+    };
+
+    initializeTimerSettings();
+
+    const handleTimerUpdateBroadcast = (e: Event) => {
+      const { focusDuration, shortBreakDuration, longBreakDuration } = (e as CustomEvent).detail;
+      const updatedDurations = {
+        Focus: focusDuration * 60,
+        "Short Break": shortBreakDuration * 60,
+        "Long Break": longBreakDuration * 60,
+      };
+
+      setDynamicDurations(updatedDurations);
+
+      // If the timer is idle, refresh the active display instantly
+      if (!isRunning) {
+        setTimeLeft(updatedDurations[sessionType]);
+      }
+    };
+
+    window.addEventListener("timerUpdate", handleTimerUpdateBroadcast);
+    return () => {
+      window.removeEventListener("timerUpdate", handleTimerUpdateBroadcast);
+    };
+  }, [sessionType, isRunning]);
 
   useEffect(() => {
     if (!isRunning) return;
@@ -132,7 +175,11 @@ function Timer() {
     return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   };
 
-  const progress = useMemo(() => ((totalDuration - timeLeft) / totalDuration) * 100, [timeLeft, totalDuration]);
+  const progress = useMemo(() => {
+    if (totalDuration === 0) return 0;
+    return ((totalDuration - timeLeft) / totalDuration) * 100;
+  }, [timeLeft, totalDuration]);
+
   const ringColor = isRunning || elapsedSeconds > 0 ? "#0d2b4e" : "#008080";
   const dailyGoalSeconds = 8 * 60 * 60;
   const focusBarWidth = Math.min((todayFocusSeconds / dailyGoalSeconds) * 100, 100);
@@ -152,7 +199,7 @@ function Timer() {
       try { await deletePomodoro(activePomodoroId); } catch (err) { console.error(err); }
     }
     setSessionType(type);
-    setTimeLeft(sessionDurations[type]);
+    setTimeLeft(dynamicDurations[type]);
     setIsRunning(false);
     setActivePomodoroId(null);
     setSessionNotes("");
@@ -162,7 +209,7 @@ function Timer() {
   const startNewPomodoro = async () => {
     const created = await createPomodoro({
       start_time: new Date().toISOString(),
-      duration: sessionDurations[sessionType],
+      duration: dynamicDurations[sessionType],
       session_type: sessionTypeToBackend(sessionType),
     });
     setActivePomodoroId(created.id);
@@ -192,7 +239,7 @@ function Timer() {
       if (activePomodoroId) await deletePomodoro(activePomodoroId);
       setIsRunning(false);
       setActivePomodoroId(null);
-      setTimeLeft(sessionDurations[sessionType]);
+      setTimeLeft(dynamicDurations[sessionType]);
       setSessionNotes("");
     } catch (err) {
       console.error(err);
@@ -242,12 +289,14 @@ function Timer() {
       setIsSavingSession(true);
       setError("");
       const pomodoroId = activePomodoroId ?? (await startNewPomodoro());
-      await finaliseSession(pomodoroId, sessionDurations[sessionType]);
+      await finaliseSession(pomodoroId, dynamicDurations[sessionType]);
       setActivePomodoroId(null);
-      setTimeLeft(sessionDurations[sessionType]);
+      
       if (sessionType === "Focus" && autoStartBreak) {
         setSessionType("Short Break");
-        setTimeLeft(sessionDurations["Short Break"]);
+        setTimeLeft(dynamicDurations["Short Break"]);
+      } else {
+        setTimeLeft(dynamicDurations[sessionType]);
       }
     } catch (err) {
       console.error(err);
@@ -266,7 +315,7 @@ function Timer() {
       const pomodoroId = activePomodoroId ?? (await startNewPomodoro());
       await finaliseSession(pomodoroId, Math.max(elapsedSeconds, 1));
       setActivePomodoroId(null);
-      setTimeLeft(sessionDurations[sessionType]);
+      setTimeLeft(dynamicDurations[sessionType]);
     } catch (err) {
       console.error(err);
       setError("Failed to complete the Pomodoro session.");
@@ -338,7 +387,7 @@ function Timer() {
               elapsedSeconds={elapsedSeconds}
               selectedTask={selectedTask}
               completedForSelected={completedForSelected}
-              sessionDurations={sessionDurations}
+              sessionDurations={dynamicDurations} // Receives the dynamic config mapping variables
               onSessionChange={handleSessionChange}
               onReset={handleReset}
               onStartPause={handleStartPause}

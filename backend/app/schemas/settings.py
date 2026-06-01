@@ -2,7 +2,7 @@
 
 from typing import Optional
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class UserSettingsBase(BaseModel):
@@ -14,6 +14,8 @@ class UserSettingsBase(BaseModel):
     pomodoros_until_long_break: int = 4
     theme: str = "light"
     notification_enabled: bool = True
+    full_name: str = "First Name Surname"
+    email: str = "fnsn@gmail.com"
 
 
 class UserSettingsUpdate(BaseModel):
@@ -25,6 +27,8 @@ class UserSettingsUpdate(BaseModel):
     pomodoros_until_long_break: Optional[int] = None
     theme: Optional[str] = None
     notification_enabled: Optional[bool] = None
+    full_name: Optional[str] = None
+    email: Optional[EmailStr] = None
 
 
 class UserSettings(UserSettingsBase):
@@ -33,5 +37,11 @@ class UserSettings(UserSettingsBase):
     user_id: int
     updated_at: datetime
 
-    # Replace the class Config with this:
     model_config = ConfigDict(from_attributes=True)
+
+
+class PasswordUpdatePayload(BaseModel):
+    """Explicit secure structure checking for changing existing user passwords"""
+
+    current_password: str
+    new_password: str = Field(..., min_length=8)

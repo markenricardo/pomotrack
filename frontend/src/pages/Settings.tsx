@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { User, Key, Timer, Sliders } from "lucide-react"; 
 import SaveModal from "../components/SaveChangesModal"; 
-import { getSettings, updateSettings } from "../api/settingsApi";
+import { getSettings, updateSettings, updatePassword } from "../api/settingsApi";
 import type { UISettings } from "../api/settingsApi";
 import "../styles/Settings.css";
 
@@ -14,6 +14,7 @@ function Settings() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
   // Timer and Preferences State 
   const [focusDuration, setFocusDuration] = useState("25");
@@ -37,12 +38,14 @@ function Settings() {
         setApiError("");
         const data = await getSettings();
         
-        // Sync states cleanly with backend responses
+        setFullName(data.fullName || "First Name Surname");
+        setEmail(data.email || "fnsn@gmail.com");
         setFocusDuration(String(data.focusDuration));
         setShortBreak(String(data.shortBreakDuration));
         setLongBreak(String(data.longBreakDuration));
         setTheme(data.theme === "dark" ? "dark" : "light");
-        setNotificationsEnabled(data.soundEnabled);
+        
+        setNotificationsEnabled(data.soundEnabled); 
       } catch (err) {
         console.error("Error pulling configurations from server:", err);
         setApiError("Unable to retrieve user preferences from the server.");
@@ -53,60 +56,127 @@ function Settings() {
     loadSavedPreferences();
   }, []);
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Saving profile changes...", { fullName, email });
-    setIsModalOpen(true);
-  };
+    setApiError("");
 
-  const handleSavePassword = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Updating password...", { currentPassword, newPassword, confirmPassword });
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-    setIsModalOpen(true);
-  };
-
-  // Centralized backend persistence hub handler
-  const savePreferencesToBackend = async (updatedFields: Partial<UISettings>) => {
     try {
-      setApiError("");
-      
-      // Merge values against active state parameters to meet structural schema needs
-      const standardPayload: UISettings = {
+      const updatedData = await updateSettings({
+        fullName: fullName,
+        email: email,
         focusDuration: parseInt(focusDuration) || 25,
         shortBreakDuration: parseInt(shortBreak) || 5,
         longBreakDuration: parseInt(longBreak) || 15,
-        longBreakInterval: 4, // Default schema mapping requirement metric
+        longBreakInterval: 4,
         theme: theme,
         soundEnabled: notificationsEnabled,
-        ...updatedFields
-      };
+      });
 
-      await updateSettings(standardPayload);
-      setIsModalOpen(true); // Fire up your signature custom success modal!
+      setFullName(updatedData.fullName);
+      setEmail(updatedData.email);
+
+      window.dispatchEvent(
+        new CustomEvent("profileUpdate", {
+          detail: { fullName: updatedData.fullName, email: updatedData.email },
+        })
+      );
+
+      setIsModalOpen(true);
     } catch (err) {
-      console.error("Error synchronizing configuration update patch payload:", err);
-      setApiError("Failed to update preferences on the backend server.");
+      console.error("Error updating profile data details:", err);
+      setApiError("Failed to save profile changes onto the server.");
     }
   };
 
-  const handleSaveTimer = (e: React.FormEvent) => {
+  const handleSavePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    savePreferencesToBackend({
-      focusDuration: parseInt(focusDuration) || 25,
-      shortBreakDuration: parseInt(shortBreak) || 5,
-      longBreakDuration: parseInt(longBreak) || 15
-    });
+    setPasswordError("");
+    setApiError("");
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordError("All password entry fields must be completely filled out.");
+      return;
+    }
+    if (newPassword.length < 8) {
+      setPasswordError("Your new password must contain at least 8 characters.");
+      return;
+    }
+    if (currentPassword === newPassword) {
+      setPasswordError("Your new password cannot be identical to your current password.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Confirmation entry mismatch. The new and confirm passwords must match.");
+      return;
+    }
+
+    try {
+      await updatePassword(currentPassword, newPassword);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setIsModalOpen(true);
+    } catch (err: any) {
+      console.error("Error tracking configuration security updates workflow:", err);
+      const serverMessage = err.response?.data?.detail || "Failed to update security parameters on the server.";
+      setPasswordError(serverMessage);
+    }
   };
 
-  const handleSavePreferences = (e: React.FormEvent) => {
+  const handleSaveTimer = async (e: React.FormEvent) => {
     e.preventDefault();
-    savePreferencesToBackend({
-      theme: theme,
-      soundEnabled: notificationsEnabled
-    });
+    setApiError("");
+    try {
+      const updatedData = await updateSettings({
+        fullName: fullName,
+        email: email,
+        focusDuration: parseInt(focusDuration) || 25,
+        shortBreakDuration: parseInt(shortBreak) || 5,
+        longBreakDuration: parseInt(longBreak) || 15,
+        longBreakInterval: 4,
+        theme: theme,
+        soundEnabled: notificationsEnabled,
+      });
+
+      window.dispatchEvent(
+        new CustomEvent("timerUpdate", {
+          detail: {
+            focusDuration: updatedData.focusDuration,
+            shortBreakDuration: updatedData.shortBreakDuration,
+            longBreakDuration: updatedData.longBreakDuration,
+          },
+        })
+      );
+
+      setIsModalOpen(true);
+    } catch (err) {
+      console.error("Error updating timer changes:", err);
+      setApiError("Failed to save timer setting adjustments.");
+    }
+  };
+
+  const handleSavePreferences = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setApiError("");
+    
+    try {
+      // Pass the complete requirements object up to your updateSettings payload mapper
+      await updateSettings({
+        fullName: fullName,
+        email: email,
+        focusDuration: parseInt(focusDuration) || 25,
+        shortBreakDuration: parseInt(shortBreak) || 5,
+        longBreakDuration: parseInt(longBreak) || 15,
+        longBreakInterval: 4,
+        theme: theme,
+        soundEnabled: notificationsEnabled, // Direct binding mapping to notification_enabled on backend
+      });
+
+      setIsModalOpen(true);
+    } catch (err) {
+      console.error("Error synchronizing preference alterations workflow:", err);
+      setApiError("Failed to update notification configuration changes on the server.");
+    }
   };
 
   if (isLoading) {
@@ -115,7 +185,6 @@ function Settings() {
 
   return (
     <div className="settings-page">
-      {/* Settings Header Layout */}
       <header className="settings-header">
         <h1>Settings</h1>
         <p>Update your account details and configure system preferences to suit your workflow.</p>
@@ -182,6 +251,12 @@ function Settings() {
                 </div>
                 <h2>Change Password</h2>
               </div>
+
+              {passwordError && (
+                <div style={{ color: "#ef4444", fontSize: "13px", marginBottom: "12px", fontWeight: "500" }}>
+                  ⚠ {passwordError}
+                </div>
+              )}
 
               <div className="input-field-group">
                 <label htmlFor="currentPassword">Current Password</label>

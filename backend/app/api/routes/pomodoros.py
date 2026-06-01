@@ -18,7 +18,57 @@ from app.db.repositories import tasks as tasks_repository
 from app.schemas.users import User
 from app.db.repositories import users as users_repository
 
+# NATIVE EMAIL IMPORTS (Built into standard Python runtime)
+import smtplib
+import os
+from email.mime.text import MIMEText
+from email.header import Header
+# Pull cache map to cross-reference custom settings flags
+from app.api.routes.settings import VOLATILE_SETTINGS_CACHE
+
 router = APIRouter(prefix="/pomodoros", tags=["pomodoros"])
+
+
+def send_native_completion_email(recipient_email: str, session_type: str, duration_seconds: Optional[int]):
+    """
+    Sends an email notification natively using Python's built-in smtplib.
+    No extra pip dependencies required.
+    """
+    # 1. Credentials (Configure these using environment variables or hardcoded values)
+    smtp_server = os.environ.get("SMTP_SERVER", "smtp.gmail.com")
+    smtp_port = int(os.environ.get("SMTP_PORT", 587))
+    smtp_user = os.environ.get("SMTP_USER", "your-email@gmail.com")
+    smtp_password = os.environ.get("SMTP_PASSWORD", "your-app-password")  # Use an email App Password here
+
+    if not smtp_user or "your-email" in smtp_user:
+        print("SMTP config skipped: update credentials to route real notification emails.")
+        return
+
+    # Calculate duration string cleanly
+    duration_str = f"{int(duration_seconds / 60)} minutes" if duration_seconds else "a standard focus interval"
+
+    # 2. Structure message content
+    subject = "🍅 Pomodoro Session Successfully Completed!"
+    body = (
+        f"Fantastic focus! You successfully recorded your '{session_type.replace('_', ' ')}' session.\n"
+        f"Total Logged Duration: {duration_str}.\n\n"
+        f"Keep up the great work and maintain your momentum!"
+    )
+
+    msg = MIMEText(body, "plain", "utf-8")
+    msg["Subject"] = Header(subject, "utf-8")
+    msg["From"] = smtp_user
+    msg["To"] = recipient_email
+
+    # 3. Securely transmit via standard secure SMTP channel loops
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()  # Secure connection using TLS
+            server.login(smtp_user, smtp_password)
+            server.sendmail(smtp_user, [recipient_email], msg.as_string())
+        print(f"Notification email dispatched natively to {recipient_email}")
+    except Exception as e:
+        print(f"Native email dispatch runtime exception warning: {str(e)}")
 
 
 @router.post("/", response_model=PomodoroSession, status_code=status.HTTP_201_CREATED)
@@ -92,7 +142,7 @@ def complete_pomodoro(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Complete a pomodoro session"""
+    """Complete a pomodoro session and handle notification preference flags natively"""
     completed_pomodoro = pomodoros_repository.complete_pomodoro(
         db,
         pomodoro_id,
@@ -105,6 +155,29 @@ def complete_pomodoro(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Pomodoro session not found"
         )
+
+    # === AUTOMATED EMAIL SELECTION GATEWAY ===
+    user_id = current_user.id
+    # Cross-reference user_id within your active volatile cache framework
+    if user_id in VOLATILE_SETTINGS_CACHE:
+        user_config = VOLATILE_SETTINGS_CACHE[user_id]
+        
+        # Pull preferences cleanly from your existing cache schema setup
+        is_enabled = user_config.get("notification_enabled", True)
+        user_email = user_config.get("email", "fnsn@gmail.com")
+
+        # If user enabled the setting, trigger the native SMTP dispatch process
+        if is_enabled and user_email:
+            # Fallback to model values if parameter values aren't explicitly provided by front-end client
+            session_type = getattr(completed_pomodoro, "session_type", "work")
+            duration = actual_duration or getattr(completed_pomodoro, "duration", 1500)
+            
+            send_native_completion_email(
+                recipient_email=user_email,
+                session_type=session_type,
+                duration_seconds=duration
+            )
+
     return completed_pomodoro
 
 
@@ -134,7 +207,6 @@ def associate_task_with_pomodoro(
     current_user: User = Depends(get_current_user),
 ):
     """Associate a task with a pomodoro session"""
-    # Ensure the provided pomodoro_id matches the one in the association data
     if association.pomodoro_session_id != pomodoro_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -160,7 +232,6 @@ def get_pomodoro_tasks(
     current_user: User = Depends(get_current_user),
 ):
     """Get all tasks associated with a pomodoro session"""
-    # Verify pomodoro exists and belongs to user
     pomodoro = pomodoros_repository.get_pomodoro(db, pomodoro_id, current_user.id)
     if not pomodoro:
         raise HTTPException(
@@ -177,7 +248,6 @@ def get_task_pomodoros(
     current_user: User = Depends(get_current_user),
 ):
     """Get all pomodoro sessions associated with a task"""
-    # Verify task exists and belongs to user
     task = tasks_repository.get_task(db, task_id, current_user.id)
     if not task:
         raise HTTPException(
@@ -226,7 +296,6 @@ def get_pomodoro_pause_stats(
     current_user: User = Depends(get_current_user),
 ):
     """Get pause statistics for a pomodoro session"""
-    # Verify pomodoro exists and belongs to user
     pomodoro = pomodoros_repository.get_pomodoro(db, pomodoro_id, current_user.id)
     if not pomodoro:
         raise HTTPException(
@@ -245,14 +314,12 @@ def create_preset_pomodoro(
     current_user: User = Depends(get_current_user),
 ):
     """Create a new pomodoro session with preset duration based on type and user settings"""
-    # Get user settings for durations
     user_settings = users_repository.get_user_settings(db, current_user.id)
     if not user_settings:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User settings not found"
         )
 
-    # Map session type to the appropriate duration from user settings
     duration_map = {
         "work": user_settings.pomodoro_duration,
         "short_break": user_settings.short_break_duration,
@@ -261,7 +328,7 @@ def create_preset_pomodoro(
 
     pomodoro = PomodoroCreate(
         start_time=datetime.now(UTC),
-        duration=duration_map[session_type],  # type: ignore
+        duration=duration_map[session_type],  
         session_type=session_type,
     )
 
