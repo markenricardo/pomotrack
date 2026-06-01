@@ -7,7 +7,7 @@ from typing import List
 # Adjust these imports based on your exact folder structure
 from app.db.database import get_db
 from app.db.models import User, PomodoroSession, Task
-from app.dependencies import get_current_user # Assuming you have an auth dependency
+from app.core.auth import get_current_user # Assuming you have an auth dependency
 
 router = APIRouter()
 
