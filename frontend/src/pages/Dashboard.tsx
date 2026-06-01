@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import '../styles/Dashboard.css';
 import Pageheader from '../components/Pageheader';
 import {
@@ -9,6 +10,7 @@ import {
   Play,
   ArrowRight,
 } from "lucide-react";
+import { useAppContext } from '../context/AppContext';
 
 interface Task {
   id: number;
@@ -28,6 +30,21 @@ interface UserData {
 }
 
 function Dashboard() {
+  const navigate = useNavigate();
+  
+  const { selectTaskForTimer, 
+          todayFocusSeconds, // <-- Grab the live seconds
+          todaySessionCount  // <-- Grab the live count  
+        } = useAppContext();
+// Converts raw seconds into "Xh Ym"
+  const formatLiveTime = (totalSeconds: number) => {
+    if (!totalSeconds) return "0h 0m";
+    const totalMinutes = Math.floor(totalSeconds / 60);
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    return `${h > 0 ? h + 'h ' : ''}${m}m`;
+  };
+
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -113,7 +130,8 @@ function Dashboard() {
             </div>
             <div>
               <p>Today's Focus Time</p>
-              <h2>{userData.todayFocusTime}</h2>
+              {/* REPLACED WITH LIVE CONTEXT */}
+              <h2>{formatLiveTime(todayFocusSeconds)}</h2>
             </div>
           </div>
 
@@ -123,7 +141,8 @@ function Dashboard() {
             </div>
             <div>
               <p>Completed Sessions</p>
-              <h2>{userData.completedSessions}</h2>
+              {/* REPLACED WITH LIVE CONTEXT */}
+              <h2>{todaySessionCount}</h2>
             </div>
           </div>
 
@@ -147,7 +166,8 @@ function Dashboard() {
               <h2>Pending Tasks</h2>
               <p>Continue where you left off.</p>
             </div>
-            <button className="view-all-btn">
+            <button className="view-all-btn"
+              onClick={() => navigate('/tasks')} >
               View All Tasks
               <ArrowRight size={16} />
             </button>
@@ -181,7 +201,13 @@ function Dashboard() {
                   </div>
 
                   <div className="task-actions">
-                    <button className="start-timer-btn">
+                    <button 
+                      className="start-timer-btn"
+                      onClick={() => {
+                        selectTaskForTimer(task.id, task.title); /* <-- 1. Save the task */
+                        navigate('/timer');                      /* <-- 2. Go to Timer */
+                      }}
+                    >
                       <Play size={14} fill="currentColor" style={{ marginRight: '6px' }} />
                       Start Timer
                     </button>

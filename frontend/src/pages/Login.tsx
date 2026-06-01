@@ -41,7 +41,7 @@ function Login() {
         },
       });
 
-      localStorage.setItem("access_token", response.data.access_token);
+      localStorage.setItem("token", response.data.access_token);
 
       console.log("Login successful:", response.data);
 
