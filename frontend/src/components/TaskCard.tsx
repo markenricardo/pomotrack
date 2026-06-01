@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+import { useAppContext } from "../context/AppContext";
 import type { Task } from "../types/taskTypes";
 
 interface TaskCardProps {
@@ -25,7 +27,15 @@ const statusClass = (status: string) => {
 
 const priorityClass = (priority: string) => priority.toLowerCase();
 
-function TaskCard({ task, onStartTimer, onEditTask, onDeleteTask }: TaskCardProps) {
+function TaskCard({ task, onEditTask, onDeleteTask }: TaskCardProps) {
+  const navigate = useNavigate();
+  const { selectTaskForTimer } = useAppContext();
+
+  const handleStartTimer = () => {
+    selectTaskForTimer(task.id, task.title);
+    navigate("/timer");
+  };
+
   return (
     <div className="task-card">
       {/* Header: title + status pill */}
@@ -64,7 +74,9 @@ function TaskCard({ task, onStartTimer, onEditTask, onDeleteTask }: TaskCardProp
         <button
           type="button"
           className="start-timer-btn"
-          onClick={() => onStartTimer(task.id)}
+          onClick={handleStartTimer}
+          disabled={task.status === "Completed"}
+          title={task.status === "Completed" ? "Task already completed" : "Start timer for this task"}
         >
           Start Timer
         </button>

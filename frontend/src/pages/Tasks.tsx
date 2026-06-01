@@ -29,6 +29,8 @@ import type {
   TaskStatus,
 } from "../types/taskTypes";
 
+import { useAppContext } from "../context/AppContext";
+
 const priorityToFrontend = (priority?: BackendPriority | null): Priority => {
   if (priority === "high") return "High";
   if (priority === "low") return "Low";
@@ -96,6 +98,9 @@ function Tasks() {
 
   const [error, setError] = useState("");
 
+  // Listen to the timer completing a task — reload tasks when it fires
+  const { taskCompletedSignal } = useAppContext();
+
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter((t) => t.status === "Completed").length;
   const inProgressTasks = tasks.filter((t) => t.status === "In Progress").length;
@@ -104,6 +109,13 @@ function Tasks() {
   useEffect(() => {
     loadTasks();
   }, []);
+
+  // Re-fetch whenever the timer signals a task was completed
+  useEffect(() => {
+    if (taskCompletedSignal > 0) {
+      loadTasks();
+    }
+  }, [taskCompletedSignal]);
 
   const loadTasks = async () => {
     try {
@@ -281,7 +293,6 @@ function Tasks() {
       <section className="tasks-stats-grid">
         <div className="task-stat-card">
           <div className="task-stat-icon total">
-            {/* Clipboard icon */}
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="9" y="2" width="6" height="4" rx="1" />
               <path d="M9 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-3" />
@@ -296,7 +307,6 @@ function Tasks() {
 
         <div className="task-stat-card">
           <div className="task-stat-icon completed">
-            {/* Check circle icon */}
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
               <polyline points="22 4 12 14.01 9 11.01" />
@@ -310,7 +320,6 @@ function Tasks() {
 
         <div className="task-stat-card">
           <div className="task-stat-icon progress">
-            {/* Clock / spinner icon */}
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
               <polyline points="12 6 12 12 16 14" />
@@ -324,7 +333,6 @@ function Tasks() {
 
         <div className="task-stat-card">
           <div className="task-stat-icon pending">
-            {/* Alert icon */}
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
               <line x1="12" y1="8" x2="12" y2="12" />
