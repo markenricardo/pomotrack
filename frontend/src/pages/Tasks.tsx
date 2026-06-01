@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import "../styles/Tasks.css";
+import PageHeader from "../components/Pageheader";
 
 import {
   getTasks,
@@ -271,11 +272,10 @@ function Tasks() {
 
   return (
     <main className="tasks-page">
-      {/* Header — stacked left-aligned like Figma */}
-      <section className="tasks-header">
-        <h1>Tasks</h1>
-        <p>Organize your tasks and connect them with your Pomodoro sessions.</p>
-      </section>
+      <PageHeader
+        title="Tasks"
+        subtitle="Organize your tasks and connect them with your Pomodoro sessions."
+      />
 
       {/* Stats */}
       <section className="tasks-stats-grid">

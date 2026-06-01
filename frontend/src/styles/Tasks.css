@@ -5,26 +5,9 @@
 .tasks-page {
   width: 100%;
   min-height: 100vh;
-  background: #eef0f8;
 }
 
-/* ── Header ─────────────────────────────────────────────── */
-.tasks-header {
-  margin-bottom: 24px;
-}
-
-.tasks-header h1 {
-  margin: 0 0 6px;
-  font-size: 26px;
-  font-weight: 800;
-  color: #1a1a2e;
-}
-
-.tasks-header p {
-  margin: 0;
-  font-size: 14px;
-  color: #6b7280;
-}
+/* ── Header handled by PageHeader.css ───────────────────── */
 
 /* ── Stats grid ──────────────────────────────────────────── */
 .tasks-stats-grid {

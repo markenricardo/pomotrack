@@ -5,30 +5,13 @@
 .timer-page {
   width: 100%;
   min-height: 100vh;
-  background: #eef0f8;
 }
 
 .timer-content {
   width: 100%;
 }
 
-/* ── Header ─────────────────────────────────────────────── */
-.timer-header {
-  margin-bottom: 24px;
-}
-
-.timer-header h1 {
-  margin: 0 0 6px;
-  font-size: 26px;
-  font-weight: 800;
-  color: #1a1a2e;
-}
-
-.timer-header p {
-  margin: 0;
-  font-size: 14px;
-  color: #6b7280;
-}
+/* ── Header handled by PageHeader.css ───────────────────── */
 
 /* ── Error ──────────────────────────────────────────────── */
 .timer-error {
@@ -558,6 +541,563 @@
   }
 
   .timer-controls {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}/* ============================================================
+   TIMER PAGE — matches Figma design
+   ============================================================ */
+
+.timer-page {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.timer-content {
+  width: 100%;
+}
+
+/* ── Header handled by PageHeader.css ───────────────────── */
+
+/* ── Error ──────────────────────────────────────────────── */
+.timer-error {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #fee2e2;
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ── Layout grid ─────────────────────────────────────────── */
+.timer-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.75fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.timer-left {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.timer-right {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Cards shared ─────────────────────────────────────────── */
+.timer-card,
+.notes-card,
+.progress-card,
+.tasks-card,
+.settings-card {
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* ── Timer card ──────────────────────────────────────────── */
+.timer-card {
+  padding: 24px;
+}
+
+/* ── Session tabs ─────────────────────────────────────────── */
+.session-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  margin-bottom: 20px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f3f4f6;
+}
+
+.session-tabs button {
+  height: 40px;
+  border: none;
+  border-right: 1px solid #d1d5db;
+  background: transparent;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.session-tabs button:last-child {
+  border-right: none;
+}
+
+.session-tabs button:hover {
+  background: rgba(0, 51, 102, 0.06);
+  color: #1a3a5c;
+}
+
+.session-tabs button.active {
+  background: #0d2b4e;
+  color: #ffffff;
+}
+
+/* ── Timer circle ────────────────────────────────────────── */
+.timer-circle-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 0 24px;
+}
+
+.timer-ring {
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  /* conic-gradient applied inline via JSX */
+  transition: background 0.4s ease;
+}
+
+.timer-inner {
+  width: 216px;
+  height: 216px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 0 1px #e5e7eb;
+  text-align: center;
+}
+
+.timer-inner span {
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0d2b4e;
+}
+
+.timer-inner h2 {
+  margin: 0;
+  font-size: 52px;
+  line-height: 1;
+  font-weight: 800;
+  color: #1a1a2e;
+  letter-spacing: -1px;
+}
+
+.timer-inner p {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+/* ── Timer controls ──────────────────────────────────────── */
+/* Change 3: default layout is 2 columns (Reset + Start); expands to 3 when Complete is visible */
+.timer-controls {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 12px;
+}
+
+.timer-controls.show-complete {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.timer-controls button {
+  height: 42px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, filter 0.15s, opacity 0.15s;
+}
+
+.timer-controls button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.reset-btn {
+  border: 1.5px solid #d1d5db;
+  background: #ffffff;
+  color: #374151;
+}
+
+.reset-btn:hover:not(:disabled) {
+  background: #f9fafb;
+}
+
+.start-btn {
+  border: none;
+  background: #0d2b4e;
+  color: #ffffff;
+}
+
+.start-btn:hover:not(:disabled) {
+  background: #143d6e;
+}
+
+.complete-btn {
+  border: none;
+  background: #22c55e;
+  color: #ffffff;
+}
+
+.complete-btn:hover:not(:disabled) {
+  filter: brightness(0.92);
+}
+
+/* ── Notes card ──────────────────────────────────────────── */
+/* Change 4: notes auto-appear after session ends */
+.notes-card {
+  padding: 20px;
+  animation: slideDown 0.25s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.notes-card h2,
+.progress-card h2,
+.tasks-card h2,
+.settings-card h2 {
+  margin: 0 0 14px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #1a1a2e;
+}
+
+/* Change 4: hint text above notes textarea */
+.notes-hint {
+  margin: -6px 0 10px;
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.notes-card textarea {
+  width: 100%;
+  min-height: 110px;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.notes-card textarea:focus {
+  border-color: #0d2b4e;
+  box-shadow: 0 0 0 3px rgba(13, 43, 78, 0.1);
+}
+
+/* ── Progress card ───────────────────────────────────────── */
+.progress-card,
+.tasks-card,
+.settings-card {
+  padding: 18px 20px;
+}
+
+.progress-item {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.progress-item + .progress-item {
+  margin-top: 18px;
+}
+
+.progress-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+}
+
+.progress-icon.green {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.progress-icon.yellow {
+  background: #fef9c3;
+  color: #ca8a04;
+}
+
+.progress-info h3 {
+  margin: 0 0 2px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.progress-item:first-child .progress-info h3 {
+  color: #0d9488;
+}
+
+.progress-item:last-child .progress-info h3 {
+  color: #d97706;
+}
+
+.progress-info strong {
+  display: inline-block;
+  margin-right: 4px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #1a1a2e;
+}
+
+.progress-info span {
+  font-size: 11px;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  margin-top: 8px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  overflow: hidden;
+}
+
+.progress-bar div {
+  height: 100%;
+  border-radius: 999px;
+  background: #0d2b4e;
+  transition: width 0.4s ease;
+}
+
+/* ── Tasks card ──────────────────────────────────────────── */
+.small-muted {
+  margin: 0;
+  font-size: 13px;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.upcoming-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.upcoming-task {
+  width: 100%;
+  padding: 10px 0;
+  border: none;
+  border-bottom: 1px solid #f3f4f6;
+  background: transparent;
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  column-gap: 10px;
+  align-items: center;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.upcoming-task:last-child {
+  border-bottom: none;
+}
+
+.upcoming-task:hover {
+  background: #f9fafb;
+}
+
+.upcoming-task.selected {
+  background: #f0f4ff;
+}
+
+.upcoming-task:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.task-circle {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid #d1d5db;
+  background: transparent;
+  flex-shrink: 0;
+}
+
+.upcoming-task.selected .task-circle {
+  border-color: #0d2b4e;
+  background: #0d2b4e;
+}
+
+.upcoming-task p {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Change 6: priority badges replacing due dates */
+.priority-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+.priority-high {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.priority-medium {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.priority-low {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+/* ── Settings card ───────────────────────────────────────── */
+/* Change 7: "Selected Task" row removed; only 2 rows remain */
+.settings-row {
+  min-height: 42px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.settings-row:last-child {
+  border-bottom: none;
+}
+
+.settings-row span {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* ── Toggle switch ───────────────────────────────────────── */
+.switch {
+  position: relative;
+  width: 42px;
+  height: 24px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.switch input {
+  display: none;
+}
+
+.switch b {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: #d1d5db;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.switch b::before {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  top: 3px;
+  left: 3px;
+  border-radius: 50%;
+  background: #ffffff;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.switch input:checked + b {
+  background: #0d2b4e;
+}
+
+.switch input:checked + b::before {
+  transform: translateX(18px);
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .timer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .timer-right {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .settings-card {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .timer-grid,
+  .timer-right {
+    grid-template-columns: 1fr;
+  }
+
+  .session-tabs {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .timer-card {
+    padding: 18px;
+  }
+
+  .timer-ring {
+    width: 230px;
+    height: 230px;
+  }
+
+  .timer-inner {
+    width: 178px;
+    height: 178px;
+  }
+
+  .timer-inner h2 {
+    font-size: 40px;
+  }
+
+  .timer-controls {
+    grid-template-columns: 1fr 2fr;
+  }
+
+  .timer-controls.show-complete {
     grid-template-columns: 1fr 1fr 1fr;
   }
 }
