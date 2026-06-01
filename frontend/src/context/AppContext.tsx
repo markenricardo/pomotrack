@@ -53,13 +53,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
     (async () => {
       try {
         const all = await getPomodoros();
+
+        //  ADDED THIS TO DEBUG:
+        console.log("RAW DATABASE DATA:", all);
+
         const todayDone = all.filter(
           (p) =>
-            p.completed === true &&
-            p.session_type === "work" &&
-            p.completed_at &&
-            isToday(p.completed_at)
+            // 1. Check if it's a work session
+            p.session_type === "work" && 
+            // 2. Check if start_time exists AND is today
+            p.start_time && 
+            isToday(p.start_time) &&
+            // 3. Make sure it's actually completed (or remove this line if your DB doesn't send 'completed')
+            p.completed === true 
         );
+
+        // ADDED THIS TO DEBUG:
+        console.log("FILTERED TODAY DATA:", todayDone);
+
         const totalSecs = todayDone.reduce(
           (sum, p) => sum + (p.actual_duration ?? p.duration ?? 0),
           0
