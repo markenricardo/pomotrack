@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Pageheader from '../components/Pageheader'; // <-- Added Pageheader
 import { 
   Star, 
   Award, 
@@ -68,7 +69,7 @@ function Achievements() {
   if (loading) {
     return (
       <div className="achievements-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <h2>Loading your progress...</h2>
+        <p className="achievements-message">Loading your progress...</p>
       </div>
     );
   }
@@ -76,7 +77,7 @@ function Achievements() {
   if (error || !data) {
     return (
       <div className="achievements-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <h2>{error || "Something went wrong."}</h2>
+        <p className="achievements-message error">{error || "Something went wrong."}</p>
       </div>
     );
   }
@@ -87,11 +88,11 @@ function Achievements() {
     <div className="achievements-page">
       <div className="achievements-container">
         
-        {/* HEADER */}
-        <header className="page-header">
-          <h1>Your Achievements</h1>
-          <p>Level up by staying focused and completing your tasks.</p>
-        </header>
+        {/* HEADER SECTION - Using the shared component */}
+        <Pageheader 
+          title="Your Achievements"
+          subtitle="Level up by staying focused and completing your tasks."
+        />
 
         {/* LEVEL & XP SECTION */}
         <section className="level-banner">
@@ -111,23 +112,23 @@ function Achievements() {
         </section>
 
         {/* QUICK STATS GRID */}
-        <section className="stats-grid">
-           <div className="stat-card">
-            <div className="stat-icon purple">
-              <Star size={28} strokeWidth={2.5} />
+        <section className="achievements-stats-grid">
+           <div className="achievement-stat-card">
+            <div className="achievement-stat-icon yellow">
+              <Star size={24} strokeWidth={2.5} />
             </div>
-            <div className="stat-info">
+            <div className="achievement-stat-info">
               <p>Total Sessions</p>
-              <h3>{data.stats.total_pomodoros}</h3>
+              <h2>{data.stats.total_pomodoros}</h2>
             </div>
           </div>
-          <div className="stat-card">
-            <div className="stat-icon blue">
-              <Award size={28} strokeWidth={2.5} />
+          <div className="achievement-stat-card">
+            <div className="achievement-stat-icon blue">
+              <Award size={24} strokeWidth={2.5} />
             </div>
-            <div className="stat-info">
+            <div className="achievement-stat-info">
               <p>Lifetime Focus</p>
-              <h3>{data.stats.total_hours}h</h3>
+              <h2>{data.stats.total_hours}h</h2>
             </div>
           </div>
         </section>
@@ -139,28 +140,28 @@ function Achievements() {
             
             <BadgeCard 
               unlocked={data.badges.first_session} 
-              icon={<Zap size={28} strokeWidth={2} />} 
+              icon={<Zap size={24} strokeWidth={2} />} 
               colorClass="yellow"
               title="First Session" 
               desc="Completed your very first focus block." 
             />
             <BadgeCard 
               unlocked={data.badges.completed_5_pomodoros} 
-              icon={<Target size={28} strokeWidth={2} />} 
+              icon={<Target size={24} strokeWidth={2} />} 
               colorClass="green"
               title="Getting Serious" 
               desc="Completed 5 total pomodoro sessions." 
             />
             <BadgeCard 
               unlocked={data.badges.focused_10_hours} 
-              icon={<Clock size={28} strokeWidth={2} />} 
-              colorClass="red"
+              icon={<Clock size={24} strokeWidth={2} />} 
+              colorClass="blue"
               title="Deep Worker" 
               desc="Logged over 10 hours of focus time." 
             />
             <BadgeCard 
               unlocked={data.badges.task_finisher} 
-              icon={<CheckCircle size={28} strokeWidth={2} />} 
+              icon={<CheckCircle size={24} strokeWidth={2} />} 
               colorClass="yellow"
               title="Task Finisher" 
               desc="Completed 10 specific tasks." 

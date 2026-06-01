@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../styles/Dashboard.css';
+import Pageheader from '../components/Pageheader';
 import {
   Clock3,
   CheckCircle2,
   Flame,
   Play,
   ArrowRight,
-  Sparkles,
 } from "lucide-react";
 
-// 1. Define the exact shape of our Task objects
 interface Task {
   id: number;
   title: string;
@@ -20,7 +19,6 @@ interface Task {
   deadline: string;
 }
 
-// 2. Define the exact shape of our Dashboard Data
 interface UserData {
   name: string;
   todayFocusTime: string;
@@ -30,7 +28,6 @@ interface UserData {
 }
 
 function Dashboard() {
-  // 3. Add TypeScript generics < > to our state hooks
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,20 +35,14 @@ function Dashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-          // --- THIS IS WHERE SOLUTION #1 GOES ---
-          // 1. Get the saved token (adjust 'token' if you saved it under a different name)
           const token = localStorage.getItem('token'); 
-
-          // 2. Add the token to the headers of the axios request
           const response = await axios.get('http://127.0.0.1:8000/api/v1/dashboard', {
             headers: {
               Authorization: `Bearer ${token}`
             }
           });
-          // --------------------------------------
         const data = response.data;
 
-        // 4. Type the parameter as a number
         const formatTime = (totalMinutes: number) => {
           if (!totalMinutes) return "0h 0m";
           const h = Math.floor(totalMinutes / 60);
@@ -59,14 +50,13 @@ function Dashboard() {
           return `${h > 0 ? h + 'h ' : ''}${m}m`;
         };
 
-        // 5. Type the incoming API task as 'any' so TS knows how to read it
         const formattedTasks = data.pending_tasks.map((task: any) => ({
           id: task.id,
           title: task.title,
           status: task.status === 'in_progress' ? 'In Progress' : 'Pending',
           priority: task.priority.charAt(0).toUpperCase() + task.priority.slice(1),
           pomodoros: task.estimated_duration || 0,
-          deadline: "Upcoming",
+          deadline: task.deadline || "Upcoming",
         }));
 
         setUserData({
@@ -90,7 +80,7 @@ function Dashboard() {
   if (loading) {
     return (
       <div className="dashboard-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <h2>Loading your focus data...</h2>
+        <p className="dashboard-message">Loading your focus data...</p>
       </div>
     );
   }
@@ -98,137 +88,101 @@ function Dashboard() {
   if (error) {
     return (
       <div className="dashboard-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <h2>{error}</h2>
+        <p className="dashboard-message error">{error}</p>
       </div>
     );
   }
 
-  // 6. We add a quick safety check so TypeScript knows userData is definitely not null here
   if (!userData) return null; 
 
   return (
     <div className="dashboard-page">
       <div className="dashboard-container">
 
-        {/* HEADER SECTION */}
-        <header className="dashboard-header">
-          <div className="header-badge">
-            <Sparkles size={16} />
-            Productivity Dashboard
-          </div>
-          <h1>Welcome back, {userData.name}</h1>
-          <p>Stay focused, manage your priorities, and track your daily progress with Pomodoro sessions.</p>
-        </header>
+        <Pageheader 
+          title={`Welcome back, ${userData.name}`}
+          subtitle="Stay focused, manage your priorities, and track your daily progress with Pomodoro sessions."
+        />
 
         {/* CORE STATS SECTION */}
-        <section className="stats-grid">
+        <section className="dashboard-stats-grid">
           
-          {/* Focus Time */}
-          <div className="stat-card">
-            <div className="stat-icon blue">
-              <Clock3 size={32} strokeWidth={2.5} />
+          <div className="dashboard-stat-card">
+            <div className="dashboard-stat-icon blue">
+              <Clock3 size={24} strokeWidth={2} />
             </div>
             <div>
-              <p className="stat-label">Today's Focus Time</p>
-              <h2 className="stat-value">{userData.todayFocusTime}</h2>
+              <p>Today's Focus Time</p>
+              <h2>{userData.todayFocusTime}</h2>
             </div>
           </div>
 
-          {/* Completed Sessions */}
-          <div className="stat-card">
-            <div className="stat-icon green">
-              <CheckCircle2 size={32} strokeWidth={2.5} />
+          <div className="dashboard-stat-card">
+            <div className="dashboard-stat-icon green">
+              <CheckCircle2 size={24} strokeWidth={2} />
             </div>
             <div>
-              <p className="stat-label">Completed Sessions</p>
-              <h2 className="stat-value">{userData.completedSessions}</h2>
+              <p>Completed Sessions</p>
+              <h2>{userData.completedSessions}</h2>
             </div>
           </div>
 
-          {/* Streak */}
-          <div className="stat-card">
-            <div className="stat-icon orange">
-              <Flame size={32} strokeWidth={2.5} />
+          <div className="dashboard-stat-card">
+            <div className="dashboard-stat-icon yellow">
+              <Flame size={24} strokeWidth={2} />
             </div>
             <div>
-              <p className="stat-label">Current Streak</p>
-              <div className="stat-value-container">
-                <h2 className="stat-value">{userData.currentStreak}</h2>
-                <span className="stat-unit">Days</span>
-              </div>
+              <p>Current Streak</p>
+              <h2>{userData.currentStreak} <span style={{fontSize: '14px', fontWeight: 600, color: '#6b7280'}}>Days</span></h2>
             </div>
           </div>
 
         </section>
 
         {/* PENDING TASKS SECTION */}
-        <section className="tasks-section">
+        <section className="dashboard-tasks-section">
           
-          <div className="tasks-header">
+          <div className="dashboard-tasks-header">
             <div>
               <h2>Pending Tasks</h2>
               <p>Continue where you left off.</p>
             </div>
-            <button className="btn-secondary">
+            <button className="view-all-btn">
               View All Tasks
               <ArrowRight size={16} />
             </button>
           </div>
 
-          <div className="tasks-grid">
+          <div className="dashboard-tasks-grid">
             {userData.pendingTasks.length > 0 ? (
               userData.pendingTasks.map((task) => (
                 <div key={task.id} className="task-card">
                   
-                  <div className="task-info">
-                    <div className="task-header-row">
-                      <h3 className="task-title">{task.title}</h3>
-                      <span className={`task-status ${task.status === 'In Progress' ? 'status-progress' : 'status-pending'}`}>
-                        {task.status}
-                      </span>
-                    </div>
-
-                    <div className="task-meta">
-                      <span className={`meta-tag meta-priority ${task.priority}`}>
-                        {task.priority} Priority
-                      </span>
-                      <span className="meta-tag">
-                        {task.pomodoros} Pomodoros
-                      </span>
-                      <span className="meta-tag">
-                        Due: {task.deadline}
-                      </span>
-                    </div>
+                  <div className="task-card-header">
+                    <h3>{task.title}</h3>
+                    <span className={`status-pill ${task.status === 'In Progress' ? 'in-progress' : 'pending'}`}>
+                      {task.status}
+                    </span>
                   </div>
 
-                  <div 
-                    className="task-actions"
-                    style={{ 
-                      display: 'flex', 
-                      flexDirection: 'column', 
-                      gap: '1.25rem', 
-                      width: '100%', 
-                      marginTop: 'auto' 
-                    }}
-                  >
-                    <div 
-                      className="progress-container"
-                      style={{ width: '100%', display: 'block' }}
-                    >
-                      <div className={`progress-bar ${task.status === 'In Progress' ? 'active' : 'inactive'}`}></div>
-                    </div>
+                  <div className="task-info">
+                    <p>
+                      Priority: 
+                      <span className={`priority-pill ${task.priority.toLowerCase()}`}>
+                        {task.priority}
+                      </span>
+                    </p>
+                    <p>
+                      Pomodoros: <strong>{task.pomodoros}</strong>
+                    </p>
+                    <p>
+                      Due: <strong>{task.deadline}</strong>
+                    </p>
+                  </div>
 
-                    <button 
-                      className="btn-primary"
-                      style={{ 
-                        width: '100%', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center', 
-                        whiteSpace: 'nowrap' 
-                      }}
-                    >
-                      <Play size={16} fill="currentColor" />
+                  <div className="task-actions">
+                    <button className="start-timer-btn">
+                      <Play size={14} fill="currentColor" style={{ marginRight: '6px' }} />
                       Start Timer
                     </button>
                   </div>
@@ -236,7 +190,7 @@ function Dashboard() {
                 </div>
               ))
             ) : (
-              <p>No pending tasks! Time to relax or add a new one.</p>
+              <p className="dashboard-message">No pending tasks! Time to relax or add a new one.</p>
             )}
           </div>
         </section>
