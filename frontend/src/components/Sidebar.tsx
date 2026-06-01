@@ -12,6 +12,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import LogoutModal from "./LogoutModal";
+import { getSettings } from "../api/settingsApi"; // Ensure this path correctly targets your settingsApi file
 import "./Sidebar.css";
 
 // --- SUB-COMPONENT: ProfileDropdown ---
@@ -23,18 +24,31 @@ const ProfileDropdown = ({ onLogoutClick }: ProfileDropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const [userProfile, setUserProfile] = useState({ fullName: "First Name Surname", email: "fnsn@gmail.com" });
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
+    // 1. Initial Load: Fetch persistent values cached on the backend database session
+    const loadProfileData = async () => {
+      try {
+        const data = await getSettings();
+        setUserProfile({
+          fullName: data.fullName || "First Name Surname",
+          email: data.email || "fnsn@gmail.com"
+        });
+      } catch (err) {
+        console.error("Failed to load user info for sidebar profile indicator:", err);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    loadProfileData();
+
+    // 2. Real-time Event Listener: Intercept updates transmitted dynamically from Settings.tsx
+    const handleProfileSync = (e: Event) => {
+      const { fullName, email } = (e as CustomEvent).detail;
+      setUserProfile({ fullName, email });
+    };
+
+    window.addEventListener("profileUpdate", handleProfileSync);
+    return () => window.removeEventListener("profileUpdate", handleProfileSync);
   }, []);
 
   return (
@@ -72,8 +86,9 @@ const ProfileDropdown = ({ onLogoutClick }: ProfileDropdownProps) => {
       >
         <div className="profile-avatar" />
         <div className="profile-info">
-          <span className="profile-name">First Name Surname</span>
-          <span className="profile-email">fnsn@gmail.com</span>
+          {/* Dynamically render state values synchronized to the custom baseline event definitions */}
+          <span className="profile-name">{userProfile.fullName}</span>
+          <span className="profile-email">{userProfile.email}</span>
         </div>
         <div className={`profile-chevron ${isOpen ? "rotated" : ""}`}>
           <ChevronDown size={16} strokeWidth={2.5} />
