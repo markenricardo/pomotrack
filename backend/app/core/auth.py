@@ -9,7 +9,7 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from app.config import settings
 from app.db.database import get_db
-from app.db.repositories.users import get_user_by_username
+from app.db.repositories.users import get_user_by_username, get_user_by_email
 from app.schemas.users import TokenData
 
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
@@ -27,8 +27,15 @@ def get_password_hash(password):
 
 
 def authenticate_user(db: Session, username: str, password: str):
-    """Authenticate a user."""
+    """Authenticate a user by username or email."""
+    # Try to find user by username first
     user = get_user_by_username(db, username)
+    
+    # If not found, try by email
+    if not user:
+        user = get_user_by_email(db, username)
+    
+    # Verify password if user is found
     if not user or not verify_password(password, user.password_hash):
         return False
     return user

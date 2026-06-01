@@ -48,7 +48,7 @@ function Login() {
       navigate("/dashboard");
     } catch (err) {
       console.error("Login failed:", err);
-      setError("Invalid username or password.");
+      setError("Invalid username/email or password.");
     } finally {
       setLoading(false);
     }
@@ -228,13 +228,13 @@ function Login() {
                   marginBottom: '0.5rem',
                 }}
               >
-                Email
+                Username/Email
               </label>
               <input
                 type="text"
                 id="username"
                 name="username"
-                placeholder="you@example.com"
+                placeholder="username or email"
                 value={formData.username}
                 onChange={handleChange}
                 required
