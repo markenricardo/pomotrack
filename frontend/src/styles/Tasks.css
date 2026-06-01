@@ -477,6 +477,134 @@
   cursor: not-allowed;
 }
 
+/* ============================================================
+   CUSTOM DROPDOWN SHARED STYLES
+   ============================================================ */
+
+.filter-select-custom {
+  position: relative;
+  width: 100%;
+  height: 40px; /* Shifted to 40px to match your input fields and buttons */
+  background: #FFFFFF;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: #374151;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+
+.filter-select-custom.default {
+  color: #374151;
+}
+
+/* Activated state when open */
+.filter-select-custom.variant2 {
+  border-color: #0d2b4e;
+  box-shadow: 0 0 0 3px rgba(13, 43, 78, 0.1);
+}
+
+.filter-select-custom .arrow-icon {
+  position: absolute;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  font-size: 10px;
+  color: #6b7280;
+  transition: transform 0.2s ease;
+  pointer-events: none; /* Prevents catching clicks instead of the parent div */
+}
+
+/* Flips the caret when open */
+.filter-select-custom.variant2 .arrow-icon {
+  transform: rotate(180deg);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 45px; /* Pushes menu safely past the 40px high control container */
+  left: 0;
+  width: 100%;
+  height: auto; 
+  background: #ffffff; /* Swapped from #D9D9D9 for a cleaner look, modify if needed */
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden; 
+  z-index: 100; /* Raised to overlay clean above standard components */
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+}
+
+.dropdown-option {
+  height: 38px; 
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  color: #374151;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.dropdown-option:hover {
+  background: #BBCFE3;
+  color: #0d2b4e;
+}
+
+
+/* ============================================================
+   REVISIONS TO FILTER BAR & MODAL CONTROLS
+   ============================================================ */
+
+/* 1. Filter Bar targets updated structural div wrapper */
+.tasks-filter-card {
+  padding: 18px 20px;
+  margin-bottom: 24px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  align-items: end;
+  gap: 16px;
+}
+
+/* Remove old `.filter-group select` selector rule entirely and use this setup */
+.filter-group .filter-select-custom {
+  /* Keeps layout constraints aligned inside grid boundaries */
+  width: 100%; 
+}
+
+/* 2. Modal Controls mapping update */
+.modal-field input,
+.modal-field .filter-select-custom,  /* Added custom selector target */
+.modal-field textarea {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 13px;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+/* Ensures custom elements don't collapse layout properties when acting as labels */
+.modal-field .filter-select-custom {
+  display: flex;
+  align-items: center;
+}
+
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 1200px) {
   .tasks-stats-grid {
