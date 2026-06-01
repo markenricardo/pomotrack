@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import "../styles/Timer.css";
-import PageHeader from "../components/Pageheader";
+import PageHeader from "../components/PageHeader";
 
 import {
   associateTaskWithPomodoro,
@@ -9,6 +9,7 @@ import {
   deletePomodoro,
   pausePomodoro,
   resumePomodoro,
+  getPomodoros,
 } from "../api/pomodorosApi";
 
 import type { BackendSessionType } from "../api/pomodorosApi";
@@ -42,16 +43,26 @@ const sessionTypeToBackend = (
 const mapBackendTaskToTimerTask = (task: BackendTask): TimerTask => ({
   id: task.id,
   title: task.title,
-  priority: (task as any).priority ?? "medium",
+  priority: task.priority ?? "medium",
   status: task.status,
 });
 
-const formatFocusTime = (seconds: number): string => {
-  const minutes = Math.floor(seconds / 60);
+const formatFocusTime = (totalSeconds: number): string => {
+  const minutes = Math.floor(totalSeconds / 60);
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
   if (hours > 0) return `${hours}h ${remainingMinutes}m`;
   return `${minutes}m`;
+};
+
+const isToday = (isoString: string): boolean => {
+  const date = new Date(isoString);
+  const now = new Date();
+  return (
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate()
+  );
 };
 
 function Timer() {
@@ -60,20 +71,19 @@ function Timer() {
   const [isRunning, setIsRunning] = useState<boolean>(false);
 
   const [activePomodoroId, setActivePomodoroId] = useState<number | null>(null);
-  const [selectedTaskId, setSelectedTaskId] = useState<number | "">("");
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
 
   const [tasks, setTasks] = useState<TimerTask[]>([]);
-  const [completedSessions, setCompletedSessions] = useState<number>(0);
-  // Change 1: track total focus time across completed sessions
-  const [totalFocusSeconds, setTotalFocusSeconds] = useState<number>(0);
+
+  const [todayFocusSeconds, setTodayFocusSeconds] = useState<number>(0);
+  const [todaySessionCount, setTodaySessionCount] = useState<number>(0);
 
   const [autoStartBreak, setAutoStartBreak] = useState<boolean>(false);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
-  // Change 4: notes shown automatically after session ends, no toggle needed
   const [sessionNotes, setSessionNotes] = useState<string>("");
-  const [showNotes, setShowNotes] = useState<boolean>(false);
 
   const [isLoadingTasks, setIsLoadingTasks] = useState<boolean>(true);
+  const [isLoadingStats, setIsLoadingStats] = useState<boolean>(true);
   const [isSavingSession, setIsSavingSession] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
 
@@ -82,6 +92,7 @@ function Timer() {
 
   useEffect(() => {
     loadTasks();
+    loadTodayStats();
   }, []);
 
   useEffect(() => {
@@ -118,6 +129,30 @@ function Timer() {
     }
   };
 
+  const loadTodayStats = async () => {
+    try {
+      setIsLoadingStats(true);
+      const allPomodoros = await getPomodoros();
+      const todayCompleted = allPomodoros.filter(
+        (p) =>
+          p.status === "completed" &&
+          p.session_type === "work" &&
+          p.completed_at &&
+          isToday(p.completed_at)
+      );
+      const totalSeconds = todayCompleted.reduce(
+        (sum, p) => sum + (p.actual_duration ?? p.duration ?? 0),
+        0
+      );
+      setTodayFocusSeconds(totalSeconds);
+      setTodaySessionCount(todayCompleted.length);
+    } catch (err) {
+      console.error("Could not load today's stats:", err);
+    } finally {
+      setIsLoadingStats(false);
+    }
+  };
+
   const formatTime = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
@@ -127,6 +162,13 @@ function Timer() {
   const progress = useMemo(() => {
     return ((totalDuration - timeLeft) / totalDuration) * 100;
   }, [timeLeft, totalDuration]);
+
+  // Teal ring at idle, navy once started
+  const ringColor = isRunning || elapsedSeconds > 0 ? "#0d2b4e" : "#008080";
+
+  const dailyGoalSeconds = 8 * 60 * 60;
+  const focusBarWidth = Math.min((todayFocusSeconds / dailyGoalSeconds) * 100, 100);
+  const sessionBarWidth = Math.min((todaySessionCount / 12) * 100, 100);
 
   const handleSessionChange = async (type: SessionType) => {
     if (activePomodoroId && isRunning) {
@@ -149,17 +191,18 @@ function Timer() {
     setIsRunning(false);
     setActivePomodoroId(null);
     setSessionNotes("");
-    setShowNotes(false);
     setError("");
   };
 
   const startNewPomodoro = async () => {
     const backendType = sessionTypeToBackend(sessionType);
+
     const createdPomodoro = await createPomodoro({
       start_time: new Date().toISOString(),
       duration: sessionDurations[sessionType],
       session_type: backendType,
     });
+
     setActivePomodoroId(createdPomodoro.id);
     return createdPomodoro.id;
   };
@@ -167,8 +210,6 @@ function Timer() {
   const handleStartPause = async () => {
     try {
       setError("");
-      // Hide notes panel when starting a new session
-      setShowNotes(false);
 
       if (!isRunning) {
         if (!activePomodoroId) {
@@ -183,6 +224,7 @@ function Timer() {
       if (activePomodoroId) {
         await pausePomodoro(activePomodoroId);
       }
+
       setIsRunning(false);
     } catch (err) {
       console.error(err);
@@ -202,16 +244,14 @@ function Timer() {
       setActivePomodoroId(null);
       setTimeLeft(sessionDurations[sessionType]);
       setSessionNotes("");
-      setShowNotes(false);
     } catch (err) {
       console.error(err);
       setError("Failed to reset the timer.");
     }
   };
 
-  const finalizeSession = async (pomodoroId: number, duration: number) => {
+  const finaliseSession = async (pomodoroId: number, duration: number) => {
     await completePomodoro(pomodoroId, duration);
-
     if (selectedTaskId) {
       await associateTaskWithPomodoro(pomodoroId, {
         pomodoro_session_id: pomodoroId,
@@ -220,12 +260,11 @@ function Timer() {
         notes: sessionNotes.trim() || null,
       });
     }
-
     if (sessionType === "Focus") {
-      setCompletedSessions((prev) => prev + 1);
-      // Change 1: accumulate total focus time
-      setTotalFocusSeconds((prev) => prev + duration);
+      setTodayFocusSeconds((prev) => prev + duration);
+      setTodaySessionCount((prev) => prev + 1);
     }
+    if (soundEnabled) playFinishSound();
   };
 
   const handleTimerFinished = async () => {
@@ -234,31 +273,17 @@ function Timer() {
       setIsSavingSession(true);
       setError("");
 
-      let pomodoroId = activePomodoroId;
-      if (!pomodoroId) {
-        pomodoroId = await startNewPomodoro();
-      }
-
-      const actualDuration = sessionDurations[sessionType];
-      await finalizeSession(pomodoroId, actualDuration);
-
-      if (soundEnabled) {
-        playFinishSound();
-      }
+      const pomodoroId = activePomodoroId ?? (await startNewPomodoro());
+      await finaliseSession(pomodoroId, sessionDurations[sessionType]);
 
       setActivePomodoroId(null);
-      // Change 4: auto-show notes after session ends
-      setShowNotes(true);
+      setTimeLeft(sessionDurations[sessionType]);
 
       if (sessionType === "Focus" && autoStartBreak) {
         setSessionType("Short Break");
         setTimeLeft(sessionDurations["Short Break"]);
-        setIsRunning(false);
-        setShowNotes(false);
         return;
       }
-
-      setTimeLeft(sessionDurations[sessionType]);
     } catch (err) {
       console.error(err);
       setError("Failed to complete the Pomodoro session.");
@@ -268,25 +293,19 @@ function Timer() {
   };
 
   const handleCompleteNow = async () => {
-    if (!activePomodoroId && elapsedSeconds <= 0) return;
+    if (!isRunning && elapsedSeconds <= 0) return;
 
     try {
       setIsRunning(false);
       setIsSavingSession(true);
       setError("");
 
-      let pomodoroId = activePomodoroId;
-      if (!pomodoroId) {
-        pomodoroId = await startNewPomodoro();
-      }
-
-      const actualDuration = Math.max(elapsedSeconds, 1);
-      await finalizeSession(pomodoroId, actualDuration);
+      const pomodoroId = activePomodoroId ?? (await startNewPomodoro());
+      const duration = Math.max(elapsedSeconds, 1);
+      await finaliseSession(pomodoroId, duration);
 
       setActivePomodoroId(null);
       setTimeLeft(sessionDurations[sessionType]);
-      // Change 4: auto-show notes after completing early
-      setShowNotes(true);
     } catch (err) {
       console.error(err);
       setError("Failed to complete the Pomodoro session.");
@@ -307,14 +326,16 @@ function Timer() {
     oscillator.type = "sine";
 
     gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
+    gainNode.gain.exponentialRampToValueAtTime(
+      0.001,
+      audioContext.currentTime + 0.5
+    );
 
     oscillator.start(audioContext.currentTime);
     oscillator.stop(audioContext.currentTime + 0.5);
   };
 
-  // Change 5: idle ring shows a subtle 3% arc so it looks "ready"
-  const ringProgress = isRunning || elapsedSeconds > 0 ? progress : 3;
+  const priorityClass = (p: string) => p.toLowerCase();
 
   return (
     <div className="timer-page">
@@ -330,6 +351,7 @@ function Timer() {
           {/* ── Left column ── */}
           <div className="timer-left">
             <section className="timer-card">
+
               {/* Session tabs */}
               <div className="session-tabs">
                 {(Object.keys(sessionDurations) as SessionType[]).map((type) => (
@@ -344,29 +366,30 @@ function Timer() {
                 ))}
               </div>
 
-              {/* Change 2: task dropdown removed — selection via Upcoming Tasks list only */}
-
               {/* Timer ring */}
               <div className="timer-circle-wrapper">
                 <div
                   className="timer-ring"
                   style={{
-                    // Change 5: idle state uses muted color so ring looks ready
-                    background: isRunning || elapsedSeconds > 0
-                      ? `conic-gradient(#0d2b4e ${ringProgress}%, #e5e7eb ${ringProgress}%)`
-                      : `conic-gradient(#c7d4e8 ${ringProgress}%, #e5e7eb ${ringProgress}%)`,
+                    background: `conic-gradient(${ringColor} ${progress}%, #e5e7eb ${progress}%)`,
                   }}
                 >
                   <div className="timer-inner">
                     <span>{sessionType}</span>
                     <h2>{formatTime(timeLeft)}</h2>
-                    <p>{activePomodoroId ? "session active" : "ready"}</p>
+                    <p>
+                      {isRunning
+                        ? "session active"
+                        : elapsedSeconds > 0
+                        ? "paused"
+                        : "ready"}
+                    </p>
                   </div>
                 </div>
               </div>
 
-              {/* Change 3: Complete button only shown when session is running */}
-              <div className={`timer-controls ${elapsedSeconds > 0 ? "show-complete" : ""}`}>
+              {/* Controls: Reset | Start/Pause */}
+              <div className="timer-controls">
                 <button
                   type="button"
                   className="reset-btn"
@@ -378,83 +401,91 @@ function Timer() {
 
                 <button
                   type="button"
-                  className={`start-btn ${elapsedSeconds > 0 ? "" : "start-btn--full"}`}
+                  className="start-btn"
                   onClick={handleStartPause}
                   disabled={isSavingSession}
                 >
                   {isRunning ? "Pause" : "Start"}
                 </button>
-
-                {elapsedSeconds > 0 && (
-                  <button
-                    type="button"
-                    className="complete-btn"
-                    onClick={handleCompleteNow}
-                    disabled={isSavingSession}
-                  >
-                    Complete
-                  </button>
-                )}
               </div>
+
+              {/* Complete early — secondary, only shown while active */}
+              {(isRunning || (elapsedSeconds > 0 && !isSavingSession)) && (
+                <button
+                  type="button"
+                  className="complete-early-btn"
+                  onClick={handleCompleteNow}
+                  disabled={isSavingSession}
+                >
+                  Mark complete early
+                </button>
+              )}
             </section>
 
-            {/* Change 4: Notes shown automatically after session ends */}
-            {showNotes && (
-              <section className="notes-card">
-                <h2>Session Notes</h2>
-                <p className="notes-hint">Great work! Add any notes about this session.</p>
-                <textarea
-                  placeholder="What did you accomplish? Any blockers?"
-                  value={sessionNotes}
-                  onChange={(event) => setSessionNotes(event.target.value)}
-                  autoFocus
-                />
-              </section>
-            )}
+            {/* Session Notes — always visible */}
+            <section className="notes-card">
+              <h2>Session Notes</h2>
+              <p className="notes-prompt">
+                Jot down anything from your session — blockers, progress, or ideas.
+              </p>
+              <textarea
+                placeholder="What did you work on? Any blockers? How was your focus?"
+                value={sessionNotes}
+                onChange={(event) => setSessionNotes(event.target.value)}
+              />
+            </section>
           </div>
 
           {/* ── Right column ── */}
           <aside className="timer-right">
-            {/* Today's Progress — Change 1: uses accumulated totalFocusSeconds */}
+
+            {/* Today's Progress — real data from backend */}
             <section className="progress-card">
               <h2>Today's Progress</h2>
 
-              <div className="progress-item">
-                <div className="progress-icon green">⏱</div>
-                <div className="progress-info">
-                  <h3>Today's Focus Time</h3>
-                  <strong>{formatFocusTime(totalFocusSeconds)}</strong>
-                  <span>/ today total</span>
-                  <div className="progress-bar">
-                    <div
-                      style={{
-                        width: `${Math.min((totalFocusSeconds / (4 * 25 * 60)) * 100, 100)}%`,
-                      }}
-                    />
+              {isLoadingStats ? (
+                <p className="small-muted">Loading stats...</p>
+              ) : (
+                <>
+                  <div className="progress-item">
+                    <div className="progress-icon green">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                      </svg>
+                    </div>
+                    <div className="progress-info">
+                      <h3>Today's Focus Time</h3>
+                      <strong>{formatFocusTime(todayFocusSeconds)}</strong>
+                      <span>/ 8h goal</span>
+                      <div className="progress-bar">
+                        <div style={{ width: `${focusBarWidth}%` }} />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              <div className="progress-item">
-                <div className="progress-icon yellow">✓</div>
-                <div className="progress-info">
-                  <h3>Completed Sessions</h3>
-                  <strong>{completedSessions}</strong>
-                  <span>/ 12 sessions</span>
-                  <div className="progress-bar">
-                    <div
-                      style={{
-                        width: `${Math.min((completedSessions / 12) * 100, 100)}%`,
-                      }}
-                    />
+                  <div className="progress-item">
+                    <div className="progress-icon yellow">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </div>
+                    <div className="progress-info">
+                      <h3>Completed Sessions</h3>
+                      <strong>{todaySessionCount}</strong>
+                      <span>/ 12 sessions</span>
+                      <div className="progress-bar">
+                        <div style={{ width: `${sessionBarWidth}%` }} />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                </>
+              )}
             </section>
 
-            {/* Upcoming Tasks — Change 2: primary task selector, Change 6: priority badges */}
+            {/* Focus on a Task — click to select, priority badge instead of due time */}
             <section className="tasks-card">
-              <h2>Upcoming Tasks</h2>
+              <h2>Focus on a Task</h2>
 
               {isLoadingTasks ? (
                 <p className="small-muted">Loading tasks...</p>
@@ -465,26 +496,35 @@ function Timer() {
                   {tasks.slice(0, 5).map((task) => (
                     <button
                       type="button"
-                      className={`upcoming-task ${selectedTaskId === task.id ? "selected" : ""}`}
+                      className={`upcoming-task ${
+                        selectedTaskId === task.id ? "selected" : ""
+                      }`}
                       key={task.id}
                       onClick={() =>
-                        setSelectedTaskId(selectedTaskId === task.id ? "" : task.id)
+                        setSelectedTaskId(
+                          selectedTaskId === task.id ? null : task.id
+                        )
                       }
                       disabled={isRunning}
                     >
                       <span className="task-circle" />
                       <p>{task.title}</p>
-                      {/* Change 6: priority badge instead of due date */}
-                      <span className={`priority-badge priority-${task.priority}`}>
+                      <span className={`task-priority-badge ${priorityClass(task.priority)}`}>
                         {task.priority}
                       </span>
                     </button>
                   ))}
                 </div>
               )}
+
+              {selectedTaskId && (
+                <p className="task-selected-hint">
+                  ✓ Task linked — it will be saved with your next session.
+                </p>
+              )}
             </section>
 
-            {/* Session Settings — Change 7: removed "Selected Task" row, Change 4: removed Session Notes toggle */}
+            {/* Session Settings — 2 toggles, no clutter */}
             <section className="settings-card">
               <h2>Session Settings</h2>
 
@@ -501,7 +541,7 @@ function Timer() {
               </div>
 
               <div className="settings-row">
-                <span>Sound</span>
+                <span>Sound on Complete</span>
                 <label className="switch">
                   <input
                     type="checkbox"
