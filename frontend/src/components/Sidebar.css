@@ -1,119 +1,329 @@
+/* ============================================================
+   SIDEBAR — matches Figma design, properly sized & responsive
+   ============================================================ */
+
 .sidebar {
-  width: 260px;
+  width: 200px;
+  min-width: 200px;
   height: 100vh;
-  background: #ffffff;
-  border-right: 1px solid #e5e7eb;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 24px 18px;
+  background: #0d2b4e;
   position: fixed;
   left: 0;
   top: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-bottom: 16px;
   z-index: 100;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
+/* ── Header ─────────────────────────────────────────────── */
 .sidebar-header {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 36px;
+  justify-content: center;
+  margin-top: 28px;
+  padding: 0 16px;
 }
 
-.logo-box {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: #7c3aed;
-  color: white;
+.title-group.centered {
+  text-align: center;
+}
+
+.brand-name {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.slogan {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  color: #708090;
+  margin: 2px 0 0;
+  white-space: nowrap;
+}
+
+/* ── Top wrapper scrolls, bottom (profile) stays fixed ── */
+.sidebar-top-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ── Nav sections ──────────────────────────────────────── */
+.sidebar-main-nav {
+  margin-top: 28px;
+  padding: 0 12px;
+}
+
+.sidebar-productivity-nav {
+  margin-top: 24px;
+  padding: 0 12px;
+}
+
+.section-label {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.8px;
+  color: #708090;
+  margin: 0 0 8px;
+  padding-left: 10px;
+}
+
+.nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-item {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 20px;
+  gap: 10px;
+  width: 100%;
+  height: 40px;
+  padding: 0 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 13.5px;
+  color: #708090;
+  transition: background 0.15s, color 0.15s;
+  box-sizing: border-box;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #adbfd4;
+}
+
+.nav-item.active {
+  background: #008080;
+  color: #ffffff;
+}
+
+/* ── Weekly Streak ─────────────────────────────────────── */
+.sidebar-streak-display {
+  margin-top: 32px;
+  padding: 0 12px;
+}
+
+.streak-title {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  color: #708090;
+  margin: 0 0 8px;
+}
+
+.streak-progress-container {
+  position: relative;
+  width: 100%;
+  height: 26px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.streak-bar {
+  width: calc(100% - 10px);
+  height: 8px;
+  background: linear-gradient(90deg, #ffcc00 0%, #ff8d28 25%, #cb30e0 50%, #ff2d55 75%, #ff383c 100%);
+  border-radius: 10px;
+  z-index: 1;
+}
+
+.streak-icon {
+  position: absolute;
+  right: -4px;
+  bottom: 0;
+  z-index: 2;
+}
+
+.streak-subtitle {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 11px;
+  color: #708090;
+  margin: 6px 0 0;
+  text-align: right;
+}
+
+/* ── Profile section ───────────────────────────────────── */
+.profile-section-container {
+  padding: 0 8px;
+  position: relative;
+  z-index: 1000;
   flex-shrink: 0;
 }
 
-.sidebar-header h2 {
-  font-size: 20px;
-  margin: 0;
-  color: #111827;
-  font-weight: 700;
-}
-
-.sidebar-header p {
-  font-size: 13px;
-  margin: 2px 0 0;
-  color: #6b7280;
-}
-
-.sidebar-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.sidebar-section {
-  margin-top: 22px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.sidebar-section-title {
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #9ca3af;
-  margin: 0 0 4px 14px;
-}
-
-.sidebar-link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 13px 14px;
-  border-radius: 12px;
-  color: #6b7280;
-  text-decoration: none;
-  font-size: 15px;
-  font-weight: 500;
-  transition: 0.2s ease;
-}
-
-.sidebar-link:hover {
-  background: #f3f4f6;
-  color: #111827;
-}
-
-.sidebar-link.active {
-  background: #ede9fe;
-  color: #6d28d9;
-}
-
-.sidebar-footer {
-  border-top: 1px solid #e5e7eb;
-  padding-top: 18px;
-}
-
-.logout-btn {
+.profile-account-card {
   width: 100%;
-  border: none;
-  background: transparent;
-  color: #ef4444;
+  height: 46px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 13px 14px;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 500;
+  padding: 0 10px;
   cursor: pointer;
-  transition: 0.2s ease;
-  margin-top: 8px;
+  box-sizing: border-box;
+  transition: background 0.15s;
 }
 
-.logout-btn:hover {
-  background: #fee2e2;
+.profile-account-card.default {
+  background: #0d2b4e;
+  color: #708090;
+}
+
+.profile-account-card.is-clicked {
+  background: #008080;
+  color: #ffffff;
+}
+
+.profile-avatar {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  background: rgba(217, 217, 217, 0.45);
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-name {
+  font-weight: 600;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-email {
+  font-weight: 400;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #708090;
+}
+
+.profile-account-card.is-clicked .profile-email {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.profile-chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+}
+
+.profile-chevron.rotated {
+  transform: rotate(180deg);
+}
+
+/* ── Profile Dropdown ──────────────────────────────────── */
+.profile-dropdown-menu {
+  position: absolute;
+  bottom: 52px;
+  left: 8px;
+  width: calc(100% - 16px);
+  background: #d9d9d9;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  z-index: 999;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.profile-dropdown-option {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  gap: 10px;
+  font-size: 13px;
+  color: #000000;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.profile-dropdown-option:hover {
+  background: #bbcfe3;
+}
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 56px;
+    min-width: 56px;
+  }
+
+  .brand-name,
+  .slogan,
+  .section-label,
+  .nav-item span,
+  .streak-title,
+  .streak-subtitle,
+  .streak-bar,
+  .profile-info,
+  .profile-chevron {
+    display: none;
+  }
+
+  .sidebar-header {
+    margin-top: 16px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .sidebar-main-nav,
+  .sidebar-productivity-nav {
+    padding: 0 6px;
+    margin-top: 16px;
+  }
+
+  .nav-item {
+    justify-content: center;
+    padding: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    margin: 0 auto;
+  }
+
+  .nav-item gap {
+    gap: 0;
+  }
+
+  .profile-section-container {
+    padding: 0 4px;
+  }
+
+  .profile-account-card {
+    justify-content: center;
+    padding: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    margin: 0 auto;
+  }
+
+  .sidebar-streak-display {
+    display: none;
+  }
 }

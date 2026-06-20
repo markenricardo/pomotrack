@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import { Mail, Globe, MessageCircle, Clock, User } from "lucide-react";
 
 function Login() {
   const navigate = useNavigate();
@@ -40,106 +41,487 @@ function Login() {
         },
       });
 
-      localStorage.setItem("access_token", response.data.access_token);
+      localStorage.setItem("token", response.data.access_token);
 
       console.log("Login successful:", response.data);
 
       navigate("/dashboard");
     } catch (err) {
       console.error("Login failed:", err);
-      setError("Invalid username or password.");
+      setError("Invalid username/email or password.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f7f2ea] px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-[#2f2a26]">PomoTrack</h1>
-          <p className="text-sm text-gray-500 mt-2">
-            Log in to continue tracking your focus sessions.
-          </p>
+    <div style={{ 
+      display: 'flex', 
+      minHeight: '100vh', 
+      flexDirection: 'row',
+      fontFamily: '"Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    }}>
+      {/* Left branding section with gradient */}
+      <div 
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          padding: '4rem 3rem',
+          background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Clock icon - top left */}
+        <div 
+          style={{
+            position: 'absolute',
+            top: '2rem',
+            left: '3rem',
+            bottom: '3rem',
+            zIndex: 2,
+          }}
+        >
+          <Clock size={32} color="white" strokeWidth={1.5} />
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label
-              htmlFor="username"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Username
-            </label>
+        {/* Decorative circles */}
+        <div style={{
+          position: 'absolute',
+          width: '500px',
+          height: '500px',
+          background: 'radial-gradient(circle, rgba(255, 255, 255, 0.1), transparent)',
+          borderRadius: '50%',
+          top: -150,
+          left: -150,
+          zIndex: 0,
+        }} />
+        <div style={{
+          position: 'absolute',
+          width: '400px',
+          height: '400px',
+          background: 'radial-gradient(circle, rgba(255, 255, 255, 0.05), transparent)',
+          borderRadius: '50%',
+          bottom: -100,
+          right: -100,
+          zIndex: 0,
+        }} />
 
-            <input
-              type="text"
-              id="username"
-              name="username"
-              placeholder="Enter your username"
-              value={formData.username}
-              onChange={handleChange}
-              required
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-[#d65a31] focus:ring-2 focus:ring-[#d65a31]/20"
-            />
+        {/* Top section */}
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <h1 
+            style={{
+              fontSize: '2.8rem',
+              fontWeight: 700,
+              letterSpacing: '-0.02em',
+              color: 'white',
+              marginTop: '3rem',
+              lineHeight: '1.3',
+              maxWidth: '350px',
+            }}
+          >
+            Get access your personal hub for clarity and productivity
+          </h1>
+        </div>
+
+        {/* Bottom section with PomoTrack and catchphrase */}
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div 
+            style={{
+              fontSize: '2.2rem',
+              fontWeight: 800,
+              fontStyle: 'italic',
+              color: 'white',
+              marginBottom: '1rem',
+              letterSpacing: '-0.02em',
+            }}
+          >
+            PomoTrack
           </div>
+          <p 
+            style={{
+              fontSize: '1rem',
+              color: 'rgba(255, 255, 255, 0.9)',
+              fontWeight: 400,
+              lineHeight: '1.6',
+              letterSpacing: '0.3px',
+              maxWidth: '300px',
+            }}
+          >
+            Harness the power of the Pomodoro technique. Track every study session, measure your productivity.
+          </p>
+        </div>
+      </div>
 
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
+      {/* Right login form section */}
+      <div 
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: '3rem 2rem',
+          position: 'relative',
+          background: '#ffffff',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Rounded card form container */}
+        <div 
+          style={{
+            width: '100%',
+            maxWidth: '420px',
+            position: 'relative',
+            zIndex: 1,
+          }}
+        >
+          <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+            {/* Icon */}
+            <div 
+              style={{
+                fontSize: '2.5rem',
+                color: '#3b82f6',
+                marginBottom: '1rem',
+                letterSpacing: '-0.05em',
+                fontWeight: 700,
+                display: 'flex',
+                justifyContent: 'center',
+              }}
             >
-              Password
-            </label>
-
-            <input
-              type="password"
-              id="password"
-              name="password"
-              placeholder="Enter your password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-[#d65a31] focus:ring-2 focus:ring-[#d65a31]/20"
-            />
-          </div>
-
-          {error && (
-            <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
-              {error}
+              <User size={32} strokeWidth={1.5} />
+            </div>
+            <h2 
+              style={{
+                fontSize: '1.75rem',
+                fontWeight: 600,
+                color: '#1f2937',
+                marginBottom: '0.5rem',
+                letterSpacing: '-0.02em',
+              }}
+            >
+              Sign In
+            </h2>
+            <p 
+              style={{
+                fontSize: '0.95rem',
+                color: '#6b7280',
+                fontWeight: 400,
+                lineHeight: '1.5',
+              }}
+            >
+              Welcome back! Please sign in to your account
             </p>
-          )}
+          </div>
 
-          <div className="flex items-center justify-between text-sm">
-            <label className="flex items-center gap-2 text-gray-600">
-              <input type="checkbox" className="rounded border-gray-300" />
-              Remember me
-            </label>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div style={{ position: 'relative' }}>
+              <label 
+                style={{
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  color: '#374151',
+                  display: 'block',
+                  marginBottom: '0.5rem',
+                }}
+              >
+                Username/Email
+              </label>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                placeholder="username or email"
+                value={formData.username}
+                onChange={handleChange}
+                required
+                style={{
+                  width: '100%',
+                  borderRadius: '0.75rem',
+                  backgroundColor: '#f9fafb',
+                  border: '1.5px solid #e5e7eb',
+                  paddingLeft: '1rem',
+                  paddingRight: '1rem',
+                  paddingTop: '0.75rem',
+                  paddingBottom: '0.75rem',
+                  fontSize: '0.95rem',
+                  color: '#1f2937',
+                  outline: 'none',
+                  transition: 'all 0.3s ease',
+                  fontFamily: '"Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                  fontWeight: 400,
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#3b82f6';
+                  e.target.style.backgroundColor = '#f0f9ff';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e5e7eb';
+                  e.target.style.backgroundColor = '#f9fafb';
+                  e.target.style.boxShadow = 'none';
+                }}
+              />
+            </div>
 
-            <button type="button" className="text-[#d65a31] hover:underline">
-              Forgot password?
+            <div style={{ position: 'relative' }}>
+              <label 
+                style={{
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  color: '#374151',
+                  display: 'block',
+                  marginBottom: '0.5rem',
+                }}
+              >
+                Password
+              </label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                style={{
+                  width: '100%',
+                  borderRadius: '0.75rem',
+                  backgroundColor: '#f9fafb',
+                  border: '1.5px solid #e5e7eb',
+                  paddingLeft: '1rem',
+                  paddingRight: '1rem',
+                  paddingTop: '0.75rem',
+                  paddingBottom: '0.75rem',
+                  fontSize: '0.95rem',
+                  color: '#1f2937',
+                  outline: 'none',
+                  transition: 'all 0.3s ease',
+                  fontFamily: '"Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                  fontWeight: 400,
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#3b82f6';
+                  e.target.style.backgroundColor = '#f0f9ff';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e5e7eb';
+                  e.target.style.backgroundColor = '#f9fafb';
+                  e.target.style.boxShadow = 'none';
+                }}
+              />
+            </div>
+
+            {error && (
+              <p 
+                style={{
+                  borderRadius: '0.75rem',
+                  backgroundColor: '#fee2e2',
+                  padding: '0.875rem',
+                  fontSize: '0.875rem',
+                  color: '#dc2626',
+                  textAlign: 'center',
+                  fontWeight: 500,
+                  border: '1px solid #fecaca',
+                }}
+              >
+                {error}
+              </p>
+            )}
+
+            <button 
+              type="submit" 
+              disabled={loading}
+              style={{
+                width: '100%',
+                borderRadius: '0.75rem',
+                background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+                border: 'none',
+                paddingTop: '0.875rem',
+                paddingBottom: '0.875rem',
+                fontSize: '1rem',
+                color: 'white',
+                fontWeight: 600,
+                cursor: loading ? 'not-allowed' : 'pointer',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 4px 6px rgba(59, 130, 246, 0.2)',
+                outline: 'none',
+                opacity: loading ? 0.7 : 1,
+                letterSpacing: '0.3px',
+                fontFamily: '"Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+              }}
+              onMouseEnter={(e) => {
+                if (!loading) {
+                  e.currentTarget.style.boxShadow = '0 10px 15px rgba(59, 130, 246, 0.3)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!loading) {
+                  e.currentTarget.style.boxShadow = '0 4px 6px rgba(59, 130, 246, 0.2)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }
+              }}
+            >
+              {loading ? 'Signing in...' : 'Sign In'}
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div 
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1rem',
+              margin: '1.5rem 0',
+            }}
+          >
+            <div style={{ flex: 1, height: '1px', backgroundColor: '#e5e7eb' }} />
+            <span style={{ fontSize: '0.875rem', color: '#9ca3af', fontWeight: 500 }}>or continue with</span>
+            <div style={{ flex: 1, height: '1px', backgroundColor: '#e5e7eb' }} />
+          </div>
+
+          {/* Social login buttons */}
+          <div 
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr 1fr',
+              gap: '0.75rem',
+              marginBottom: '1.5rem',
+            }}
+          >
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                document.querySelector('form')?.dispatchEvent(new Event('submit', { bubbles: true }));
+              }}
+              style={{
+                padding: '0.75rem',
+                borderRadius: '0.75rem',
+                border: '1.5px solid #e5e7eb',
+                backgroundColor: '#f9fafb',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                color: '#1f2937',
+                fontFamily: '"Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#f3f4f6';
+                e.currentTarget.style.borderColor = '#d1d5db';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#f9fafb';
+                e.currentTarget.style.borderColor = '#e5e7eb';
+              }}
+            >
+              <Mail size={18} />
+              Email
+            </button>
+            <button
+              type="button"
+              onClick={() => console.log('Google login clicked')}
+              style={{
+                padding: '0.75rem',
+                borderRadius: '0.75rem',
+                border: '1.5px solid #e5e7eb',
+                backgroundColor: '#f9fafb',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                color: '#1f2937',
+                fontFamily: '"Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#f3f4f6';
+                e.currentTarget.style.borderColor = '#d1d5db';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#f9fafb';
+                e.currentTarget.style.borderColor = '#e5e7eb';
+              }}
+            >
+              <img src="/google.svg" alt="Google" style={{ width: '18px', height: '18px' }} />
+              Google
+            </button>
+            <button
+              type="button"
+              onClick={() => console.log('Facebook login clicked')}
+              style={{
+                padding: '0.75rem',
+                borderRadius: '0.75rem',
+                border: '1.5px solid #e5e7eb',
+                backgroundColor: '#f9fafb',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                color: '#1f2937',
+                fontFamily: '"Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#f3f4f6';
+                e.currentTarget.style.borderColor = '#d1d5db';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#f9fafb';
+                e.currentTarget.style.borderColor = '#e5e7eb';
+              }}
+            >
+              <img src="/facebook.svg" alt="Facebook" style={{ width: '18px', height: '18px' }} />
+              Facebook
             </button>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-[#d65a31] py-3 text-white font-semibold hover:bg-[#bf4d28] transition disabled:opacity-60"
+          {/* Sign up link */}
+          <p 
+            style={{ 
+              fontSize: '0.95rem', 
+              color: '#6b7280', 
+              fontWeight: 400,
+              textAlign: 'center',
+            }}
           >
-            {loading ? "Logging in..." : "Log In"}
-          </button>
-        </form>
-
-        <p className="text-center text-sm text-gray-500 mt-6">
-          Don&apos;t have an account?{" "}
-          <button
-            type="button"
-            onClick={() => navigate("/signup")}
-            className="text-[#d65a31] font-medium hover:underline"
-          >
-            Sign up
-          </button>
-        </p>
+            Don't have an account?{" "}
+            <button
+              type="button"
+              onClick={() => navigate("/signup")}
+              style={{
+                color: '#3b82f6',
+                fontWeight: 600,
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                textDecoration: 'none',
+                transition: 'all 0.3s ease',
+                fontFamily: '"Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.color = '#8b5cf6'}
+              onMouseLeave={(e) => e.currentTarget.style.color = '#3b82f6'}
+            >
+              Sign up
+            </button>
+          </p>
+        </div>
       </div>
     </div>
   );

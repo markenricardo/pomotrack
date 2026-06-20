@@ -1,0 +1,251 @@
+/* ============================================================
+   ACHIEVEMENTS PAGE — Matches Figma / Tasks Page Design
+   ============================================================ */
+
+.achievements-page {
+  width: 100%;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+.achievements-container {
+  max-width: 1280px; /* Matched to the Timer and Dashboard */
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Messages ────────────────────────────────────────────── */
+.achievements-message {
+  margin: 0 0 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.achievements-message.error {
+  color: #dc2626;
+}
+
+/* ── Level & XP Banner ───────────────────────────────────── */
+.level-banner {
+  background-color: #ffffff;
+  border-radius: 14px; /* Updated to 14px */
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.level-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.level-title-block p {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #008080; /* Teal theme */
+  margin: 0 0 4px 0;
+}
+
+.level-title-block h2 {
+  font-size: 22px; /* Matched to Stats */
+  font-weight: 800;
+  color: #1a1a2e;
+  margin: 0;
+}
+
+.xp-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.xp-text span {
+  color: #1a1a2e;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.xp-bar-container {
+  width: 100%;
+  height: 12px;
+  background-color: #f1f5f9;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.xp-bar-fill {
+  height: 100%;
+  background: #008080; /* Swapped purple gradient for Teal */
+  border-radius: 999px;
+  transition: width 0.5s ease-out;
+}
+
+/* ── Quick Stats Grid ────────────────────────────────────── */
+.achievements-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 4 columns like Tasks page */
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.achievement-stat-card {
+  min-height: 90px;
+  padding: 18px 20px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.achievement-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.achievement-stat-icon {
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+}
+
+.achievement-stat-icon.yellow { background: #fef9c3; color: #ca8a04; }
+.achievement-stat-icon.blue { background: #dbeafe; color: #2563eb; }
+.achievement-stat-icon.green { background: #dcfce7; color: #16a34a; }
+
+.achievement-stat-info p {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.achievement-stat-info h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: #1a1a2e;
+}
+
+/* ── Badges & Achievements Grid ──────────────────────────── */
+.section-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #1a1a2e;
+  margin: 10px 0 16px 0;
+}
+
+.badges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.badge-card {
+  background-color: #ffffff;
+  border-radius: 14px; /* Updated to 14px */
+  padding: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.badge-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+.badge-card.locked {
+  background-color: #f8fafc;
+  opacity: 0.7;
+}
+
+.badge-card.locked .badge-icon {
+  background-color: #e2e8f0;
+  color: #94a3b8;
+}
+
+.badge-icon {
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.badge-icon.yellow { background-color: #fefce8; color: #eab308; }
+.badge-icon.green { background-color: #f0fdf4; color: #16a34a; }
+.badge-icon.blue { background-color: #eff6ff; color: #3b82f6; }
+.badge-icon.red { background-color: #fef2f2; color: #ef4444; }
+
+.badge-details h4 {
+  font-size: 17px;
+  font-weight: 800;
+  color: #1a1a2e;
+  margin: 0 0 6px 0;
+}
+
+.badge-details p {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0 0 12px 0;
+  line-height: 1.4;
+}
+
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+/* Matches the Status Pills from Tasks Page */
+.status-unlocked { background-color: #dcfce7; color: #15803d; }
+.status-locked { background-color: #f3f4f6; color: #6b7280; }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 1200px) {
+  .achievements-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .achievements-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .badges-grid {
+    grid-template-columns: 1fr;
+  }
+}
