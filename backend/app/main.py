@@ -2,7 +2,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.routes import auth, users, tasks, pomodoros, dashboard, history, achievements, settings as settings_router, analytics
+from backend.app.api.routes import auth, users, tasks, pomodoros, dashboard, history, achievements, settings as settings_router, analytics
 from app.config import settings
 
 app = FastAPI(
