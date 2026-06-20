@@ -3,7 +3,7 @@ import sys
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.app.api.routes import auth, users, tasks, pomodoros, dashboard, history, achievements, settings as settings_router, analytics
+from app.api.routes import auth, users, tasks, pomodoros, dashboard, history, achievements, settings as settings_router, analytics
 from app.config import settings
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
